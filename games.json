@@ -1,0 +1,74 @@
+{
+  "_note": "The store list. Add a game here, then run: python3 tools/sync.py  (and tools/publish.py to send it to every launcher).",
+  "owner": "ROCKSTARB0I",
+  "games": [
+    {
+      "id": "overdrive", "title": "OVERDRIVE", "repo": "OverDrive", "folder": "overdrive",
+      "tagline": "Midnight street racing in 80s wedge-era supercars.",
+      "about": "Four original period cars, a six-event street career, a live radio dial and online races with friends. Tune your car, buy paint and wheels with street cash, and race the city at night.",
+      "genres": ["Racing", "Online"], "modes": ["PC"], "rating": "Everyone 10+", "color": "#ff3b1f",
+      "exclude": ["desktop/", "server/", "tools/", "Dockerfile", ".dockerignore", ".gitignore", "server.json"]
+    },
+    {
+      "id": "ghost-hunters-tv", "title": "Ghost Hunters TV", "repo": "Ghost-Hunters-TV", "folder": "Ghost Hunters TV",
+      "tagline": "A silly ghost-hunting TV show you play with friends.",
+      "about": "One friend films, the rest host, and one friend can be the ghost. Edith the diva, Poltergeist Pete, Sir Clanksalot and Gloop are all waiting to be caught on camera.",
+      "genres": ["Party", "Online", "Silly"], "modes": ["PC"], "rating": "Everyone 10+", "color": "#7cff6b",
+      "exclude": ["desktop/", "server/", "tools/", "server.json"]
+    },
+    {
+      "id": "gore-lab", "title": "Gore Lab VR", "repo": "GORE-LAB-VR", "folder": "gore-lab",
+      "tagline": "A physics sandbox. Grab a weapon and take the dummies apart.",
+      "about": "A test lab full of weapons and crash-test dummies with real physics bodies. Built for Meta Quest, playable on PC with mouse and keyboard.",
+      "genres": ["Sandbox", "Action"], "modes": ["PC", "VR"], "rating": "Mature 17+", "color": "#e8322b"
+    },
+    {
+      "id": "brutalist-vr", "title": "BRUTALIST VR", "repo": "BRUTALIST-VR", "folder": "splinter-vr",
+      "tagline": "A stickman physics sandbox. Swing with weight, cut anything.",
+      "about": "Heavy weapons, floppy stickmen and walls to paint. A work in progress.",
+      "genres": ["Sandbox", "Action"], "modes": ["PC", "VR"], "rating": "Teen 13+", "color": "#f2f2f2", "early": true
+    },
+    {
+      "id": "infiltrate", "title": "INFILTRATE", "repo": "INFILTRATE-VR", "folder": "infiltrate",
+      "tagline": "Slip into a black site at night and get out alive.",
+      "about": "A tactical stealth game: silenced weapons, real reloads and guards that hunt you. Take out two targets, steal their intel and get back to the van before the alarm goes up.",
+      "genres": ["Stealth", "Shooter"], "modes": ["PC", "VR"], "rating": "Mature 17+", "color": "#39d0ff"
+    },
+    {
+      "id": "jasons-revenge", "title": "Jason's Revenge", "repo": "Jasons-Revenge", "folder": "jasons-revenge",
+      "tagline": "Friday the 13th at Camp Crystal Lake. You are Jason.",
+      "about": "The counselors are back. Cut the phone line, wreck their car and kill the power before anyone calls for help.",
+      "genres": ["Horror"], "modes": ["PC", "VR"], "rating": "Mature 17+", "color": "#4f8f3a"
+    },
+    {
+      "id": "halloweenvr", "title": "HALLOWEENVR", "repo": "HALLOWEENVR", "folder": "halloweenvr",
+      "tagline": "Haddonfield, October 31, 1978. You are Michael Myers.",
+      "about": "Stalk the quiet streets of Haddonfield on Halloween night. VR on Quest, or WASD and mouse on PC.",
+      "genres": ["Horror"], "modes": ["PC", "VR"], "rating": "Mature 17+", "color": "#ff8a1f"
+    },
+    {
+      "id": "manhuntvr", "title": "MANHUNT VR", "repo": "MANHUNTVR", "folder": "manhunt-vr",
+      "tagline": "Carcer City. Every hunter in the district wants you dead.",
+      "about": "You are James Earl Cash. Stay in the shadows, keep quiet, and survive the Director's night.",
+      "genres": ["Stealth", "Horror"], "modes": ["PC", "VR"], "rating": "Mature 17+", "color": "#c9c9c9"
+    },
+    {
+      "id": "asylumvr", "title": "AsylumVR", "repo": "AsylumVR", "folder": "asylumvr",
+      "tagline": "Mount Harrow State Asylum. Run. Hide. Record.",
+      "about": "You are a journalist with a camcorder and you cannot fight. Hide in lockers and under beds, and use night vision to see in the dark. It eats batteries.",
+      "genres": ["Horror"], "modes": ["PC", "VR"], "rating": "Mature 17+", "color": "#8fe38f"
+    },
+    {
+      "id": "postal2-vr", "title": "POSTAL 2 VR", "repo": "-POSTAL2-VR", "folder": "postal-2",
+      "tagline": "A little janky, a lot of chaos.",
+      "about": "Run errands in a town that has had enough of you.",
+      "genres": ["Action", "Open World"], "modes": ["PC", "VR"], "rating": "Mature 17+", "color": "#e0c040", "early": true
+    },
+    {
+      "id": "granny-vr", "title": "Granny VR", "repo": "granny-vr", "folder": "granny",
+      "tagline": "Get out of Granny's house before she finds you.",
+      "about": "Sneak through a creaky house, find the keys and escape. Every noise you make, she hears.",
+      "genres": ["Horror"], "modes": ["PC", "VR"], "rating": "Teen 13+", "color": "#b07ad8"
+    }
+  ]
+}

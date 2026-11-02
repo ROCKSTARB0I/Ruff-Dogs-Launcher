@@ -1,0 +1,32 @@
+// RuffDogsLauncher.exe resources: icon, Windows manifest, version info.
+// The icon is language-neutral on purpose: installing a game rewrites icon group 1 with that game's icon.
+#include <windows.h>
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+1 ICON "icon.ico"
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+1 RT_MANIFEST "ruffdogs.manifest"
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION 1,0,0,0
+PRODUCTVERSION 1,0,0,0
+FILEOS VOS_NT_WINDOWS32
+FILETYPE VFT_APP
+BEGIN
+  BLOCK "StringFileInfo"
+  BEGIN
+    BLOCK "040904B0"
+    BEGIN
+      VALUE "CompanyName", "Ruff Dogs Studios"
+      VALUE "FileDescription", "Ruff Dogs Launcher"
+      VALUE "FileVersion", "1.0.0"
+      VALUE "InternalName", "RuffDogsLauncher"
+      VALUE "LegalCopyright", "(c) 2026 Ruff Dogs Studios"
+      VALUE "OriginalFilename", "RuffDogsLauncher.exe"
+      VALUE "ProductName", "Ruff Dogs Launcher"
+      VALUE "ProductVersion", "1.0.0"
+    END
+  END
+  BLOCK "VarFileInfo"
+  BEGIN
+    VALUE "Translation", 0x409, 1200
+  END
+END

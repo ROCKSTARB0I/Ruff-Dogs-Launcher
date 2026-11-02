@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ruff Dogs Launcher</title>
+<link rel="icon" href="brand/emblem.jpg">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="splash"><img src="brand/emblem.jpg" alt=""><div class="splash-bar"><i></i></div><div class="splash-text">Waking up the dogs…</div></div>
+
+<header id="top" hidden>
+  <div class="brand"><img src="brand/emblem.jpg" alt=""><span>RUFF DOGS</span></div>
+  <nav>
+    <a data-go="store">STORE</a>
+    <a data-go="library">LIBRARY</a>
+    <a data-go="downloads">DOWNLOADS <b id="dl-badge" hidden></b></a>
+    <a data-go="profile" id="nav-name">PROFILE</a>
+  </nav>
+  <div class="top-right">
+    <div id="dl-mini" hidden></div>
+    <button id="me-chip" data-go="profile"><img alt=""><span></span><i></i></button>
+    <button class="icon-btn" data-go="settings" title="Settings"><svg viewBox="0 0 24 24"><path d="M19.4 13a7.5 7.5 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.6 7.6 0 0 0-1.7-1L15 3.3h-4l-.4 2.6a7.6 7.6 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.5 7.5 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a7.6 7.6 0 0 0 1.7 1l.4 2.6h4l.4-2.6a7.6 7.6 0 0 0 1.7-1l2.5 1 2-3.5zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z" transform="translate(-1 0)"/></svg></button>
+  </div>
+</header>
+
+<main id="view" hidden></main>
+<div id="login" hidden></div>
+<div id="modal" hidden></div>
+<div id="toasts"></div>
+
+<script src="bridge.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
