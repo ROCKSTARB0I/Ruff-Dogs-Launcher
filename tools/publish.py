@@ -15,7 +15,8 @@ import uimanifest
 ROOT = uimanifest.ROOT
 REPO, BRANCH = 'ROCKSTARB0I/Ruff-Dogs-Launcher', 'main'
 TOKEN_FILE = os.environ.get('RD_TOKEN_FILE') or os.path.join(os.path.dirname(ROOT), 'server-manager', 'github-token.txt')
-SOURCES = ['games.json', 'README.md', '.gitignore', 'native/ruffdogs.c', 'native/ruffdogs.rc', 'native/ruffdogs.manifest',
+SOURCES = ['games.json', 'notes.json', 'README.md', 'native/setup.c', 'native/setup.rc',
+           'native/setup-art/side.png', 'native/setup-art/wordmark.png', 'native/setup-art/dog.png', '.gitignore', 'native/ruffdogs.c', 'native/ruffdogs.rc', 'native/ruffdogs.manifest',
            'native/icon.ico', 'tools/sync.py', 'tools/pack.py', 'tools/publish.py', 'tools/uimanifest.py', 'dev/devserver.py']
 MANAGED = ('ui/',)                                  # files gone locally get deleted from the repo here
 
@@ -38,6 +39,8 @@ def main():
     except OSError: sys.exit(f'No GitHub token at {TOKEN_FILE}. See server-manager/README.md ("One-time setup").')
     man = uimanifest.update()
     want = ['ui/' + r for r in man['files']] + ['ui/version.json'] + [s for s in SOURCES if os.path.isfile(os.path.join(ROOT, s))]
+    for d, _, fs in os.walk(os.path.join(ROOT, 'art')):        # store art made for the launcher
+        want += [os.path.relpath(os.path.join(d, f), ROOT).replace(os.sep, '/') for f in fs if not f.startswith('.')]
 
     ref = gh('GET', f'/git/ref/heads/{BRANCH}')
     if ref is None:                                   # brand-new empty repo: the first file has to go in through the contents API

@@ -1,6 +1,6 @@
 {
- "version": 1793662122,
- "generated": "2026-11-02T23:28:42Z",
+ "version": 1793662896,
+ "generated": "2026-11-02T23:41:36Z",
  "games": [
   {
    "id": "overdrive",
@@ -111,7 +111,14 @@
    "size": 2280156,
    "files": 66,
    "web": "https://rockstarb0i.github.io/Ghost-Hunters-TV/",
-   "art": {},
+   "art": {
+    "cover": "art/ghost-hunters-tv/cover.jpg",
+    "header": "art/ghost-hunters-tv/header.jpg",
+    "hero": "art/ghost-hunters-tv/hero.jpg",
+    "logo": "art/ghost-hunters-tv/logo.png",
+    "icon": "art/ghost-hunters-tv/icon.jpg",
+    "ico": "art/ghost-hunters-tv/game.ico"
+   },
    "added": "2026-11-01"
   },
   {
@@ -149,7 +156,9 @@
    "files": 71,
    "web": "https://rockstarb0i.github.io/GORE-LAB-VR/",
    "art": {
+    "cover": "art/gore-lab/cover.jpg",
     "header": "art/gore-lab/header.jpg",
+    "hero": "art/gore-lab/hero.jpg",
     "icon": "art/gore-lab/icon.png",
     "ico": "art/gore-lab/game.ico"
    },
@@ -200,7 +209,14 @@
    "size": 1584685,
    "files": 15,
    "web": "https://rockstarb0i.github.io/BRUTALIST-VR/",
-   "art": {},
+   "art": {
+    "cover": "art/brutalist-vr/cover.jpg",
+    "header": "art/brutalist-vr/header.jpg",
+    "hero": "art/brutalist-vr/hero.jpg",
+    "logo": "art/brutalist-vr/logo.png",
+    "icon": "art/brutalist-vr/icon.jpg",
+    "ico": "art/brutalist-vr/game.ico"
+   },
    "added": "2026-11-01"
   },
   {
@@ -238,7 +254,10 @@
    "files": 19,
    "web": "https://rockstarb0i.github.io/INFILTRATE-VR/",
    "art": {
+    "cover": "art/infiltrate/cover.jpg",
     "header": "art/infiltrate/header.jpg",
+    "hero": "art/infiltrate/hero.jpg",
+    "logo": "art/infiltrate/logo.png",
     "icon": "art/infiltrate/icon.png",
     "ico": "art/infiltrate/game.ico"
    },
@@ -286,7 +305,14 @@
    "size": 2016126,
    "files": 22,
    "web": "https://rockstarb0i.github.io/Jasons-Revenge/",
-   "art": {},
+   "art": {
+    "cover": "art/jasons-revenge/cover.jpg",
+    "header": "art/jasons-revenge/header.jpg",
+    "hero": "art/jasons-revenge/hero.jpg",
+    "logo": "art/jasons-revenge/logo.png",
+    "icon": "art/jasons-revenge/icon.jpg",
+    "ico": "art/jasons-revenge/game.ico"
+   },
    "added": "2026-11-01"
   },
   {
@@ -321,7 +347,14 @@
    "size": 1528484,
    "files": 16,
    "web": "https://rockstarb0i.github.io/HALLOWEENVR/",
-   "art": {},
+   "art": {
+    "cover": "art/halloweenvr/cover.jpg",
+    "header": "art/halloweenvr/header.jpg",
+    "hero": "art/halloweenvr/hero.jpg",
+    "logo": "art/halloweenvr/logo.png",
+    "icon": "art/halloweenvr/icon.jpg",
+    "ico": "art/halloweenvr/game.ico"
+   },
    "added": "2026-11-01"
   },
   {
@@ -359,6 +392,10 @@
    "files": 570,
    "web": "https://rockstarb0i.github.io/MANHUNTVR/",
    "art": {
+    "cover": "art/manhuntvr/cover.jpg",
+    "header": "art/manhuntvr/header.jpg",
+    "hero": "art/manhuntvr/hero.jpg",
+    "logo": "art/manhuntvr/logo.png",
     "icon": "art/manhuntvr/icon.png",
     "ico": "art/manhuntvr/game.ico"
    },
@@ -405,6 +442,10 @@
    "files": 48,
    "web": "https://rockstarb0i.github.io/AsylumVR/",
    "art": {
+    "cover": "art/asylumvr/cover.jpg",
+    "header": "art/asylumvr/header.jpg",
+    "hero": "art/asylumvr/hero.jpg",
+    "logo": "art/asylumvr/logo.png",
     "icon": "art/asylumvr/icon.png",
     "ico": "art/asylumvr/game.ico"
    },
@@ -450,7 +491,14 @@
    "size": 4718074,
    "files": 324,
    "web": "https://rockstarb0i.github.io/-POSTAL2-VR/",
-   "art": {},
+   "art": {
+    "cover": "art/postal2-vr/cover.jpg",
+    "header": "art/postal2-vr/header.jpg",
+    "hero": "art/postal2-vr/hero.jpg",
+    "logo": "art/postal2-vr/logo.png",
+    "icon": "art/postal2-vr/icon.jpg",
+    "ico": "art/postal2-vr/game.ico"
+   },
    "added": "2026-11-01"
   },
   {
@@ -483,7 +531,14 @@
    "size": 1552853,
    "files": 22,
    "web": "https://rockstarb0i.github.io/granny-vr/",
-   "art": {},
+   "art": {
+    "cover": "art/granny-vr/cover.jpg",
+    "header": "art/granny-vr/header.jpg",
+    "hero": "art/granny-vr/hero.jpg",
+    "logo": "art/granny-vr/logo.png",
+    "icon": "art/granny-vr/icon.jpg",
+    "ico": "art/granny-vr/game.ico"
+   },
    "added": "2026-11-01"
   }
  ]

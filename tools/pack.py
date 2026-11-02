@@ -23,6 +23,23 @@ def compile_exe(out):
            'ruffdogs.c', 'ruffdogs.rc', *[f'-l{l}' for l in libs], '--name', 'RuffDogsLauncher', f'-femit-bin={out}']
     subprocess.run(cmd, cwd=NATIVE, check=True)
 
+def build_setup(launcher, dist):
+    """RuffDogsSetup.exe: the install wizard (native/setup.c) with the launcher riding on the end.
+    [setup program][launcher bytes][b'RDSETUP1'][u64 offset][u64 length]"""
+    bare = os.path.join(BUILD, 'RuffDogsSetup-bare.exe')
+    libs = ['user32', 'gdi32', 'shell32', 'shlwapi', 'ole32', 'advapi32', 'gdiplus', 'dwmapi', 'uuid']
+    subprocess.run([os.path.join(TOOLS, 'zig', 'zig'), 'build-exe', '-target', 'x86_64-windows-gnu', '-O', 'ReleaseSmall', '-fstrip',
+                    '--subsystem', 'windows', '-lc', 'setup.c', 'setup.rc', *[f'-l{l}' for l in libs], '--name', 'RuffDogsSetup',
+                    f'-femit-bin={bare}'], cwd=NATIVE, check=True)
+    data = open(launcher, 'rb').read()
+    out = os.path.join(dist, 'RuffDogsSetup.exe')
+    with open(out, 'wb') as f:
+        f.write(open(bare, 'rb').read()); off = f.tell(); f.write(data)
+        f.write(b'RDSETUP1' + struct.pack('<QQ', off, len(data)))
+    z = os.path.join(dist, 'RuffDogsSetup.zip')
+    with zipfile.ZipFile(z, 'w', zipfile.ZIP_DEFLATED) as zf: zf.write(out, 'RuffDogsSetup.exe')
+    return out, z
+
 def main():
     man = uimanifest.update()
     files = {rel: open(os.path.join(uimanifest.UI, rel), 'rb').read() for rel in man['files']}
@@ -46,7 +63,9 @@ def main():
         f.write(b'RDPAK001' + struct.pack('<Q', idx))
     z = os.path.join(dist, 'RuffDogsLauncher.zip')
     with zipfile.ZipFile(z, 'w', zipfile.ZIP_DEFLATED) as zf: zf.write(exe, 'RuffDogsLauncher.exe')
+    setup, sz = build_setup(exe, dist)
     mb = lambda n: f'{n / 1048576:.1f} MB'
+    print(f'built {setup} ({mb(os.path.getsize(setup))}), {sz} ({mb(os.path.getsize(sz))})  <- give people this one')
     print(f'page version {man["version"]}: program {size // 1024} KB + {len(files)} packed files')
     print(f'built {exe} ({mb(os.path.getsize(exe))}), {z} ({mb(os.path.getsize(z))})')
 

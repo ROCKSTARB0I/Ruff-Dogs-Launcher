@@ -42,8 +42,11 @@ def art_for(g):
     if g['id'] != 'overdrive':
         choices = {k: [p for p in v if not p.startswith('../overdrive-steam')] for k, v in choices.items()}
         choices['hero'] = []
+    choices.setdefault('logo', [])
+    made = os.path.join(ROOT, 'art', g['id'])           # store art made for the launcher (art/<id>/cover.jpg ...) comes first
     for kind, paths in choices.items():
-        for p in paths:
+        mine = [os.path.join(made, kind + e) for e in ('.jpg', '.png') if os.path.isfile(os.path.join(made, kind + e))]
+        for p in mine + paths:
             f = os.path.normpath(os.path.join(src, p))
             if os.path.isfile(f):
                 ext = os.path.splitext(f)[1].lower()

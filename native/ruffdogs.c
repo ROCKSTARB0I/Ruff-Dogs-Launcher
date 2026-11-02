@@ -1144,8 +1144,11 @@ static void load_config(void) {
 // and desktop shortcuts, and run that copy. Later starts (and newer downloads of the launcher) update it in place.
 static int self_install(PWSTR cmd) {
   WCHAR progs[MAX_PATH], dir[BIG], dst[BIG];
-  SHGetFolderPathW(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, progs);
-  _snwprintf(dir, BIG, L"%ls\\Programs\\Ruff Dogs Launcher", progs);
+  DWORD n = sizeof dir;                                   // RuffDogsSetup.exe records the folder the player picked
+  if (RegGetValueW(HKEY_CURRENT_USER, L"Software\\Ruff Dogs\\Launcher", L"InstallDir", RRF_RT_REG_SZ, NULL, dir, &n) != ERROR_SUCCESS || !dir[0]) {
+    SHGetFolderPathW(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, progs);
+    _snwprintf(dir, BIG, L"%ls\\Programs\\Ruff Dogs Launcher", progs);
+  }
   _snwprintf(dst, BIG, L"%ls\\RuffDogsLauncher.exe", dir);
   if (!_wcsicmp(dst, g_self)) return 0;
   SHCreateDirectoryExW(NULL, dir, NULL);
