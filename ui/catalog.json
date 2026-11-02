@@ -1,6 +1,6 @@
 {
- "version": 1793661442,
- "generated": "2026-11-02T23:17:22Z",
+ "version": 1793662122,
+ "generated": "2026-11-02T23:28:42Z",
  "games": [
   {
    "id": "overdrive",
@@ -17,10 +17,47 @@
    ],
    "rating": "Everyone 10+",
    "color": "#ff3b1f",
-   "commit": "bdd3374fbf536e7619c6041703840618227453ac",
-   "updated": "2026-11-02T02:21:43Z",
-   "news": "OVERDRIVE version 9",
-   "size": 6632934,
+   "commit": "b8635bd3a54ea0b8974addf4b71af960d963a5bc",
+   "updated": "2026-11-02T23:28:17Z",
+   "notes": [
+    {
+     "date": "2026-11-02",
+     "title": "Look around while you race",
+     "items": [
+      "Move the mouse to look around your car while racing. The camera eases back behind you after a moment.",
+      "The mouse pointer hides during races. Press Esc to pause.",
+      "Smoother sound on slower PCs."
+     ]
+    },
+    {
+     "date": "2026-11-02",
+     "title": "Faster start and tunnel fix",
+     "items": [
+      "The intro no longer freezes on PC: the game gets its graphics ready before the video plays.",
+      "Fixed tunnel entrances that had a wall sticking into the road.",
+      "Less choppy sound on laptops."
+     ]
+    },
+    {
+     "date": "2026-11-01",
+     "title": "Graphics settings and online lookup",
+     "items": [
+      "New GRAPHICS setting (High, Medium, Low). It picks the right one for your PC by itself.",
+      "Press F3 to see your frame rate.",
+      "The game finds the online server by itself."
+     ]
+    },
+    {
+     "date": "2026-10-31",
+     "title": "Smoother roads",
+     "items": [
+      "Fixed black puddles that looked like holes in the road.",
+      "Fixed black spots where the ground poked through the road."
+     ]
+    }
+   ],
+   "news": "Look around while you race",
+   "size": 6633110,
    "files": 86,
    "web": "https://rockstarb0i.github.io/OverDrive/",
    "art": {
@@ -51,7 +88,26 @@
    "color": "#7cff6b",
    "commit": "fe8566c13b745e237ebf0dda78fac382f3f325ba",
    "updated": "2026-11-02T02:21:19Z",
-   "news": "Ghost Hunters TV version 2",
+   "notes": [
+    {
+     "date": "2026-11-02",
+     "title": "Windows version and online fix",
+     "items": [
+      "Ghost Hunters TV now has its own Windows .exe with a start screen.",
+      "Online rooms connect more reliably."
+     ]
+    },
+    {
+     "date": "2026-11-01",
+     "title": "First release",
+     "items": [
+      "One friend films, the rest host, and one friend can be the ghost.",
+      "Four ghosts to catch on camera: Edith, Poltergeist Pete, Sir Clanksalot and Gloop.",
+      "Silly crew with big noses and wobbly heads."
+     ]
+    }
+   ],
+   "news": "Windows version and online fix",
    "size": 2280156,
    "files": 66,
    "web": "https://rockstarb0i.github.io/Ghost-Hunters-TV/",
@@ -76,7 +132,19 @@
    "color": "#e8322b",
    "commit": "c70ffce132ac3a66902bb366053e1ca46f74c1ef",
    "updated": "2026-10-31T01:19:46Z",
-   "news": "v34",
+   "notes": [
+    {
+     "date": "2026-10-31",
+     "title": "New sounds and better faces",
+     "items": [
+      "Realistic weapon, impact and punch sounds.",
+      "More realistic dummies with sculpted noses.",
+      "New explosions.",
+      "Fixed the choke grab on necks."
+     ]
+    }
+   ],
+   "news": "New sounds and better faces",
    "size": 6749765,
    "files": 71,
    "web": "https://rockstarb0i.github.io/GORE-LAB-VR/",
@@ -106,7 +174,29 @@
    "early": true,
    "commit": "908d5aa1db17c75dfc79134799e9a715cf4ade13",
    "updated": "2026-11-02T01:36:02Z",
-   "news": "Add files via upload",
+   "notes": [
+    {
+     "date": "2026-11-02",
+     "title": "New weapons and grabbing enemies",
+     "items": [
+      "New weapons: the zweihander, scimitar, naginata, mace, pitchfork and an autocannon.",
+      "Enemies can grab your hand. Shake it free or punch your way out.",
+      "Rebuilt hands with real fingers.",
+      "Hub stalls now page with arrows."
+     ]
+    },
+    {
+     "date": "2026-11-01",
+     "title": "Hub, career and new maps",
+     "items": [
+      "A market hall hub with four weapon stalls, a tailor and a jobs board.",
+      "Weapon walls on every map, plus 13 jobs to earn cash.",
+      "New maps: alley, rooftops, yard, tenement, depot, metro, chapel and downtown.",
+      "Fixed VR walking going the wrong way after you turn."
+     ]
+    }
+   ],
+   "news": "New weapons and grabbing enemies",
    "size": 1584685,
    "files": 15,
    "web": "https://rockstarb0i.github.io/BRUTALIST-VR/",
@@ -131,7 +221,19 @@
    "color": "#39d0ff",
    "commit": "dfaee0d7e50f4a47b7466df161d6848121d2430f",
    "updated": "2026-10-16T22:49:14Z",
-   "news": "Add files via upload",
+   "notes": [
+    {
+     "date": "2026-10-16",
+     "title": "Missions and operators",
+     "items": [
+      "Three missions: BLACK SITE, HARBOR and THE VILLA.",
+      "Pick an operator: SPECTRE, TORCH or WRAITH.",
+      "Gadgets: drone, breach charges, flashbangs and a heartbeat sensor.",
+      "Security cameras and walls you can shoot through."
+     ]
+    }
+   ],
+   "news": "Missions and operators",
    "size": 1801143,
    "files": 19,
    "web": "https://rockstarb0i.github.io/INFILTRATE-VR/",
@@ -159,7 +261,28 @@
    "color": "#4f8f3a",
    "commit": "a123bc0be56a4234e16c0ebbb3554afa6447463a",
    "updated": "2026-10-19T22:22:52Z",
-   "news": "v19: index cache tag",
+   "notes": [
+    {
+     "date": "2026-10-19",
+     "title": "Prettier skies",
+     "items": [
+      "A painted tree line on the horizon.",
+      "Clouds that fade in and out smoothly.",
+      "Flatter far hills."
+     ]
+    },
+    {
+     "date": "2026-10-17",
+     "title": "Play as a counselor",
+     "items": [
+      "New counselor mode: hide from Jason, find items and escape.",
+      "Six areas with lit, furnished cabins. Pick one on the title screen.",
+      "Smarter, scarier Jason.",
+      "A more realistic forest and moonlight."
+     ]
+    }
+   ],
+   "news": "Prettier skies",
    "size": 2016126,
    "files": 22,
    "web": "https://rockstarb0i.github.io/Jasons-Revenge/",
@@ -183,7 +306,18 @@
    "color": "#ff8a1f",
    "commit": "4872e60e83fe71b295a0ad9f7f18c0c17692b28f",
    "updated": "2026-10-17T01:08:14Z",
-   "news": "Add files via upload",
+   "notes": [
+    {
+     "date": "2026-10-17",
+     "title": "Haddonfield update",
+     "items": [
+      "Real jointed fingers, and both hands now match your controllers.",
+      "You start outside on the lawn across from the Myers house.",
+      "A simple arrow shows you where to go next."
+     ]
+    }
+   ],
+   "news": "Haddonfield update",
    "size": 1528484,
    "files": 16,
    "web": "https://rockstarb0i.github.io/HALLOWEENVR/",
@@ -208,7 +342,19 @@
    "color": "#c9c9c9",
    "commit": "3fc483b829d8ee52158e7c43aebd8af1e8c21d99",
    "updated": "2026-10-18T22:26:28Z",
-   "news": "Executions menu item; cache tags v46",
+   "notes": [
+    {
+     "date": "2026-10-18",
+     "title": "Story scenes and Executions menu",
+     "items": [
+      "Fourteen story cutscenes with voice acting between levels.",
+      "New Executions menu: try every weapon on a demo stage.",
+      "New stone and concrete textures for Born Again.",
+      "Fixed the news anchor having no sound in VR."
+     ]
+    }
+   ],
+   "news": "Story scenes and Executions menu",
    "size": 19468509,
    "files": 570,
    "web": "https://rockstarb0i.github.io/MANHUNTVR/",
@@ -235,7 +381,26 @@
    "color": "#8fe38f",
    "commit": "a6d57c675311c7af26e5708e69328370c6f090f0",
    "updated": "2026-10-30T23:29:42Z",
-   "news": "v39: prerecorded title themes and menu sounds",
+   "notes": [
+    {
+     "date": "2026-10-30",
+     "title": "New title music",
+     "items": [
+      "New title themes and menu sounds.",
+      "Install it as an app on your Quest."
+     ]
+    },
+    {
+     "date": "2026-10-19",
+     "title": "Testing Site",
+     "items": [
+      "A new Testing Site area with its own logo and theme.",
+      "Tape 4: the chained door opens with the bolt cutters.",
+      "VR captions now fit on screen."
+     ]
+    }
+   ],
+   "news": "New title music",
    "size": 3991949,
    "files": 48,
    "web": "https://rockstarb0i.github.io/AsylumVR/",
@@ -264,7 +429,24 @@
    "early": true,
    "commit": "bda61639ba796257e4489747a663184f4211e132",
    "updated": "2026-10-16T22:39:23Z",
-   "news": "Load correctly in the flat deployed layout",
+   "notes": [
+    {
+     "date": "2026-10-16",
+     "title": "Voices and fixes",
+     "items": [
+      "Hundreds of new voice lines.",
+      "Fixed the game not loading online."
+     ]
+    },
+    {
+     "date": "2026-10-14",
+     "title": "First release",
+     "items": [
+      "Play on a flat screen or in VR."
+     ]
+    }
+   ],
+   "news": "Voices and fixes",
    "size": 4718074,
    "files": 324,
    "web": "https://rockstarb0i.github.io/-POSTAL2-VR/",
@@ -288,7 +470,16 @@
    "color": "#b07ad8",
    "commit": "713a666d46836cb75913e667be1f2d905c221c77",
    "updated": "2026-10-14T22:02:50Z",
-   "news": "Add files via upload",
+   "notes": [
+    {
+     "date": "2026-10-14",
+     "title": "First release",
+     "items": [
+      "Escape Granny's house in VR or on PC."
+     ]
+    }
+   ],
+   "news": "First release",
    "size": 1552853,
    "files": 22,
    "web": "https://rockstarb0i.github.io/granny-vr/",

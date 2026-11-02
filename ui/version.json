@@ -1,12 +1,12 @@
 {
-"version":2,
+"version":3,
 "files":{
-"app.js":"fc79a602dd89b866cc78284063f92721ca164f38",
+"app.js":"804abe5db89523ee90645ea65c65dc3869808f47",
 "bridge.js":"4b80aaf9c508ee0fc3ba9bf7fc2e1cb03550cac3",
-"catalog.json":"b41f2769767d6f242852f723f7a494a8121bed3b",
+"catalog.json":"f287553d576a3c522a342034c4f3b7cbb7c2d600",
 "config.json":"547a659321b648600a8e240894c964df326e1067",
-"index.html":"2047f7709d8930bae93c6fa4a873064c86ed5310",
-"style.css":"7f62b58f94c034347134bdaa8330eb45e560b0ac",
+"index.html":"f3371faa836f30ecbf1652bedcd7739164e30efd",
+"style.css":"12e10d28f5af42cc97ed41ef9e91b2957d9ef2f4",
 "art/asylumvr/game.ico":"5de425f284169a52c2b5967f54f216f2fbec6c17",
 "art/asylumvr/icon.png":"899a454652f0e7bd05b001196906c91d2e89e66a",
 "art/gore-lab/game.ico":"295e37e3853cc01889e1de27ff8b16e4e9b1a2d6",
@@ -23,7 +23,9 @@
 "art/overdrive/hero.jpg":"bca0241a6ab13e3588e9d26e546f7d976f00f218",
 "art/overdrive/icon.png":"8a20a07063542dbb80ca1f5f836a760af9d4e209",
 "art/overdrive/logo.png":"b93cc6731b17fc2b735640dbd0fbaf7e34858650",
-"brand/emblem.jpg":"9435a52c59f1b88618e2081e6192693facd75494",
+"brand/dog.png":"580408860e979a0c6b5063886dd30bf59cc9fefb",
+"brand/logo-mark.png":"a6f602f90e4870149125425a802fc13a23a19da5",
+"brand/logo-wide.png":"f2bbe937cb2f84b8b46aabc1fffc5c3947d643e2",
 "manifests/asylumvr.json":"81815ad862555359ac188d188f7dbd41b80abb88",
 "manifests/brutalist-vr.json":"1135506328d4d940558f2f1bff322ae428781bdd",
 "manifests/ghost-hunters-tv.json":"d8d174ce27eb1148b1c77b2cbd8c699a4d9b5249",
@@ -33,7 +35,7 @@
 "manifests/infiltrate.json":"53caa34091da7a2faf528f0d7e4d9413ab95a997",
 "manifests/jasons-revenge.json":"d430ce28fea0c6d4e0853098570743377b83a7ba",
 "manifests/manhuntvr.json":"669f588ce3be3d22a95e49f104f8c1307090d3af",
-"manifests/overdrive.json":"98246334a64dc56c9000e1d97ff1b99f19352663",
+"manifests/overdrive.json":"0400672503f9e44d1727bf93a216592d7c17a207",
 "manifests/postal2-vr.json":"75b0915fffa6fbfa634ae5f8e1fd9c0f28968697"
 }
 }

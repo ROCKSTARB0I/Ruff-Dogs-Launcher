@@ -33,7 +33,7 @@ const needsUpdate = (g) => { const i = installed(g.id); return i && i.commit !==
 
 // ------------------------------------------------------------------------------------------------ formatting
 const fmtSize = (b) => b >= 1073741824 ? (b / 1073741824).toFixed(1) + ' GB' : b >= 1048576 ? (b / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB';
-const fmtDate = (d) => d ? new Date(d).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : '';
+const fmtDate = (d) => d ? new Date(/^\d{4}-\d\d-\d\d$/.test(d) ? d + 'T12:00:00' : d).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : '';
 function fmtAgo(d) {
   if (!d) return 'Never';
   const s = (Date.now() - new Date(d)) / 1000;
@@ -259,8 +259,7 @@ function showLogin(tab = 'signin') {
   const L = $('#login'); L.hidden = false;
   const reg = tab === 'register';
   L.innerHTML = `<div class="login-card">
-    <img class="em" src="brand/emblem.jpg" alt="">
-    <h2>RUFF DOGS</h2><div class="sub">${reg ? 'Make your Ruff Dogs account. It works in the launcher and online in OVERDRIVE.' : 'Sign in to your Ruff Dogs account'}</div>
+    <img class="wm" src="brand/logo-wide.png" alt="Ruff Dogs"><div class="sub">${reg ? 'Make your Ruff Dogs account. It works in the launcher and online in OVERDRIVE.' : 'Sign in to your Ruff Dogs account'}</div>
     <div class="ltabs"><button class="${reg ? '' : 'on'}" data-tab="signin">SIGN IN</button><button class="${reg ? 'on' : ''}" data-tab="register">CREATE ACCOUNT</button></div>
     <form autocomplete="off">
       <div class="field"><label>Username</label><input name="u" maxlength="16" spellcheck="false" autofocus>${reg ? '<div class="hint">3 to 16 letters, numbers or _. Everyone sees this name, so don\'t use your real name.</div>' : ''}</div>
@@ -299,9 +298,18 @@ function renderServerDot() {
   if (d) { d.className = 'server-dot ' + (S.server.status === 'up' ? 'up' : S.server.status === 'down' ? 'down' : ''); }
   if (t) t.textContent = S.server.status === 'up' ? 'Ruff Dogs servers are online' : S.server.status === 'down' ? 'Ruff Dogs servers are asleep. Signing in needs them.' : 'Looking for the Ruff Dogs servers…';
 }
+// Default picture: the first letter of the name on colors picked at random from the name (same name, same colors).
+function letterAvatar(name) {
+  let h = 2166136261;
+  for (const ch of name.toLowerCase()) h = Math.imul(h ^ ch.codePointAt(0), 16777619) >>> 0;
+  const hue = h % 360, hue2 = (hue + 40 + (h >> 9) % 80) % 360, ang = (h >> 17) % 360;
+  const letter = esc(([...name.trim()][0] || '?').toUpperCase());
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256"><defs><linearGradient id="g" gradientTransform="rotate(${ang} .5 .5)"><stop offset="0" stop-color="hsl(${hue} 70% 52%)"/><stop offset="1" stop-color="hsl(${hue2} 75% 30%)"/></linearGradient></defs><rect width="256" height="256" fill="url(#g)"/><circle cx="${40 + h % 60}" cy="${30 + (h >> 5) % 50}" r="${90 + (h >> 11) % 60}" fill="#fff" opacity=".08"/><text x="128" y="128" dy=".35em" text-anchor="middle" font-family="Bahnschrift, Segoe UI, Arial, sans-serif" font-weight="700" font-size="140" fill="#fff" style="paint-order:stroke" stroke="#0003" stroke-width="6">${letter}</text></svg>`;
+  return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+}
 const avatarUrl = () => {
   const a = S.session && S.session.profile && S.session.profile.avatar;
-  return a ? (/^https?:/.test(a) ? a : (S.session.server || S.server.url) + a) : 'brand/emblem.jpg';
+  return a ? (/^https?:/.test(a) ? a : (S.session.server || S.server.url) + a) : letterAvatar(S.session && S.session.name || 'Guest');
 };
 
 // ------------------------------------------------------------------------------------------------ routing + rendering
@@ -377,6 +385,7 @@ function wire(root) {
     else if (act === 'cancel') cancelJob(id);
     else if (act === 'manage') openManage(S.byId[id]);
     else if (act === 'feature') showFeature(+b.dataset.i);
+    else if (act === 'allnotes') { S.allNotes = id; render(); }
     else if (act === 'filter') { S.storeFilter = b.dataset.v; render(); }
     else if (act === 'libfilter') { S.libFilter = b.dataset.v; render(); }
     else if (act === 'folder') Native.send({ t: 'folder' });
@@ -397,7 +406,7 @@ function wire(root) {
 
 // ------------------------------------------------------------------------------------------------ store
 function pageStore() {
-  if (!S.games.length) return `<div class="empty"><img src="brand/emblem.jpg" alt=""><div>Couldn't load the store. Check your internet connection.</div><button class="btn ghost small" data-act="recheck">TRY AGAIN</button></div>`;
+  if (!S.games.length) return `<div class="empty"><img src="brand/dog.png" alt=""><div>Couldn't load the store. Check your internet connection.</div><button class="btn ghost small" data-act="recheck">TRY AGAIN</button></div>`;
   const feat = [...S.games].sort((a, b) => new Date(b.updated) - new Date(a.updated)).slice(0, 5);
   S.featureN = feat.length; S.featureI = S.featureI % S.featureN || 0;
   const genres = ['All', 'PC', 'VR', ...new Set(S.games.flatMap((g) => g.genres || []))];
@@ -446,6 +455,16 @@ function detailsBox(g) {
     <div class="rating"><b>${esc((g.rating || 'Everyone').split(' ')[0][0])}</b><span>${esc(g.rating || 'Everyone')}</span></div>
   </div>`;
 }
+function notesBlock(g, limit, ready) {
+  const notes = g.notes && g.notes.length ? g.notes : [{ date: g.updated, title: g.news, items: [] }];
+  const one = (n, i) => `<div class="news ${i === 0 && ready ? 'ready' : ''}">
+    <div class="when">${i === 0 ? (ready ? 'Update ready · ' : 'Latest · ') : ''}${fmtDate(n.date)}</div>
+    <div class="what">${esc(n.title === 'Update' ? 'Fixes and changes' : n.title)}</div>
+    ${n.items && n.items.length ? `<ul>${n.items.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>` : ''}</div>`;
+  const more = notes.length > limit ? `<a class="news-more" data-act="allnotes" data-id="${g.id}">Show older updates (${notes.length - limit})</a>`
+    : limit > 2 && notes.length > 1 ? `<a class="news-more" data-act="allnotes" data-id="">Show less</a>` : '';
+  return notes.slice(0, limit).map(one).join('') + more;
+}
 function vrBox(g) {
   if (!(g.modes || []).includes('VR')) return '';
   return `<div class="vr-box"><b>Play in VR on your Quest:</b> open this in the Quest browser and press Enter VR. On PC it plays with mouse and keyboard.<code>${esc(g.web)}</code>
@@ -462,7 +481,7 @@ function pageGame() {
     <div class="gp-body"><div>
       ${S.active && S.active.id === g.id ? progressBlock() + '<div style="height:18px"></div>' : ''}
       <div class="section-title" style="margin-top:0"><span>What's new</span></div>
-      <div class="news"><div class="when">${fmtAgo(g.updated)}</div><div class="what">${esc(g.news)}</div></div>
+      ${notesBlock(g, S.allNotes === g.id ? 6 : 2)}
       <div class="section-title"><span>About this game</span></div>
       <p>${esc(g.about)}</p>
       ${g.early ? '<p style="color:var(--gold2)">Early access: this game is still being made and will change a lot.</p>' : ''}
@@ -476,7 +495,7 @@ function pageLibrary() {
   for (const id of Object.keys(S.native.installed || {})) own.add(id);
   const q = S.libSearch.trim().toLowerCase();
   const games = S.games.filter((g) => own.has(g.id) && (!q || g.title.toLowerCase().includes(q)) && (S.libFilter !== 'installed' || installed(g.id)) && (S.libFilter !== 'vr' || (g.modes || []).includes('VR')));
-  if (!own.size) return `<div class="empty"><img src="brand/emblem.jpg" alt=""><div style="font:700 24px var(--display);letter-spacing:.08em;color:var(--text)">YOUR LIBRARY IS EMPTY</div><div>Every Ruff Dogs game is free. Grab some from the store.</div><button class="btn play" data-go="store">GO TO THE STORE</button></div>`;
+  if (!own.size) return `<div class="empty"><img src="brand/dog.png" alt=""><div style="font:700 24px var(--display);letter-spacing:.08em;color:var(--text)">YOUR LIBRARY IS EMPTY</div><div>Every Ruff Dogs game is free. Grab some from the store.</div><button class="btn play" data-go="store">GO TO THE STORE</button></div>`;
   const sel = S.byId[S.route.id] && own.has(S.route.id) ? S.byId[S.route.id] : games[0] || S.games.find((g) => own.has(g.id));
   if (sel && S.route.id !== sel.id) { S.route.id = sel.id; history.replaceState(null, '', '#library/' + sel.id); }
   const item = (g) => {
@@ -499,7 +518,8 @@ function pageLibrary() {
       <div class="more"><button class="btn ghost small" data-go="game" data-id="${g.id}">STORE PAGE</button>${i ? `<button class="icon-btn" data-act="manage" data-id="${g.id}" title="Manage">${ICON.dots}</button>` : ''}</div>
     </div>
     <div class="lib-content"><div>
-      ${needsUpdate(g) ? `<div class="news" style="border-left-color:var(--blue)"><div class="when">Update ready · ${fmtAgo(g.updated)}</div><div class="what">${esc(g.news)}</div></div>` : `<div class="section-title" style="margin-top:0"><span>Latest update</span></div><div class="news"><div class="when">${fmtAgo(g.updated)}</div><div class="what">${esc(g.news)}</div></div>`}
+      <div class="section-title" style="margin-top:0"><span>What's new</span></div>
+      ${notesBlock(g, S.allNotes === g.id ? 6 : 1, needsUpdate(g))}
       <div class="section-title"><span>About</span></div><p style="color:#cfcbc3;line-height:1.65">${esc(g.about)}</p>${vrBox(g)}
     </div>${detailsBox(g)}</div>
   </div></div>`;
@@ -627,7 +647,7 @@ function openManage(g) {
 }
 function toast(g, title, text) {
   const t = document.createElement('div'); t.className = 'toast';
-  t.innerHTML = `${g ? art(g, 'icon') : '<div class="art"><img src="brand/emblem.jpg" alt=""></div>'}<div><b>${esc(title)}</b><span>${esc(text)}</span></div>`;
+  t.innerHTML = `${g ? art(g, 'icon') : '<div class="art"><img src="brand/dog.png" alt=""></div>'}<div><b>${esc(title)}</b><span>${esc(text)}</span></div>`;
   $('#toasts').appendChild(t);
   setTimeout(() => { t.style.transition = 'opacity .4s'; t.style.opacity = 0; setTimeout(() => t.remove(), 450); }, 5000);
 }
