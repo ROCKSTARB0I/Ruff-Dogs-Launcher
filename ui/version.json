@@ -1,9 +1,9 @@
 {
-"version":4,
+"version":5,
 "files":{
 "app.js":"804abe5db89523ee90645ea65c65dc3869808f47",
 "bridge.js":"4b80aaf9c508ee0fc3ba9bf7fc2e1cb03550cac3",
-"catalog.json":"45d187fae548a07da457926db5bb93b99d0fa137",
+"catalog.json":"6f450664b8fc8ca00dd01f51780672ac629fdd9a",
 "config.json":"547a659321b648600a8e240894c964df326e1067",
 "index.html":"f3371faa836f30ecbf1652bedcd7739164e30efd",
 "style.css":"12e10d28f5af42cc97ed41ef9e91b2957d9ef2f4",
@@ -80,7 +80,7 @@
 "manifests/ghost-hunters-tv.json":"d8d174ce27eb1148b1c77b2cbd8c699a4d9b5249",
 "manifests/gore-lab.json":"d1889a7d7ee3cd47145f1b32c790f56c15132503",
 "manifests/granny-vr.json":"05b47e3bb03a1316cb9098b0b0860919a3ca15ff",
-"manifests/halloweenvr.json":"06e53e2e2d92ed50fd73f388accd4c90a13a938b",
+"manifests/halloweenvr.json":"0fce4df6d661173708705f0335257ff18dd37b61",
 "manifests/infiltrate.json":"53caa34091da7a2faf528f0d7e4d9413ab95a997",
 "manifests/jasons-revenge.json":"d430ce28fea0c6d4e0853098570743377b83a7ba",
 "manifests/manhuntvr.json":"669f588ce3be3d22a95e49f104f8c1307090d3af",

@@ -1,6 +1,6 @@
 {
- "version": 1793662896,
- "generated": "2026-11-02T23:41:36Z",
+ "version": 1793663383,
+ "generated": "2026-11-02T23:49:43Z",
  "games": [
   {
    "id": "overdrive",
@@ -330,9 +330,21 @@
    ],
    "rating": "Mature 17+",
    "color": "#ff8a1f",
-   "commit": "4872e60e83fe71b295a0ad9f7f18c0c17692b28f",
-   "updated": "2026-10-17T01:08:14Z",
+   "commit": "140c0d0fba75a98d7a6c597ed0c1f892f0a5b6dd",
+   "updated": "2026-11-02T23:47:28Z",
    "notes": [
+    {
+     "date": "2026-11-02",
+     "title": "The Shape update",
+     "items": [
+      "Evil Within: stalk people who haven't noticed you to grow stronger in three tiers. Tier III makes you fast and unstoppable for fifty seconds.",
+      "Stand still to hear frightened heartbeats through the walls.",
+      "Friends fight back: someone who sees you grab a friend will rush in and pull them free.",
+      "Dr. Loomis now actually hunts you with his revolver.",
+      "New look: glowing streetlights with light shafts, a damp street, film grain and bloom on PC, drifting dust, falling leaves and trees in the wind.",
+      "Haddonfield dressed for Halloween: carved jack-o'-lanterns, bushy hedges, telephone poles and wires, a scarecrow, hay bales, lawn tombstones, hydrants and the Lampkin Lane street sign."
+     ]
+    },
     {
      "date": "2026-10-17",
      "title": "Haddonfield update",
@@ -343,9 +355,9 @@
      ]
     }
    ],
-   "news": "Haddonfield update",
-   "size": 1528484,
-   "files": 16,
+   "news": "The Shape update",
+   "size": 1560577,
+   "files": 18,
    "web": "https://rockstarb0i.github.io/HALLOWEENVR/",
    "art": {
     "cover": "art/halloweenvr/cover.jpg",
