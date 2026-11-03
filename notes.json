@@ -3,6 +3,14 @@
   "overdrive": [
     {
       "date": "2026-11-03",
+      "title": "Radio and start menu in the launcher",
+      "items": [
+        "The radio plays its songs when you play from the Ruff Dogs Launcher.",
+        "OVERDRIVE opens on its own start menu again, with the theme music."
+      ]
+    },
+    {
+      "date": "2026-11-03",
       "title": "Online works from the launcher",
       "items": [
         "Online races now find the Ruff Dogs server when you play from the Ruff Dogs Launcher.",

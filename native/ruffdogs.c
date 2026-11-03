@@ -355,10 +355,12 @@ static int http_get(HINTERNET s, const char *url, int timeout, char **out, DWORD
   if (!r || !WinHttpSendRequest(r, headers ? headers : WINHTTP_NO_ADDITIONAL_HEADERS, headers ? (DWORD)-1L : 0, WINHTTP_NO_REQUEST_DATA, 0, 0, 0) || !WinHttpReceiveResponse(r, NULL)) goto done;
   DWORD code = 0, cl = sizeof code;
   WinHttpQueryHeaders(r, WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER, WINHTTP_HEADER_NAME_BY_INDEX, &code, &cl, WINHTTP_NO_HEADER_INDEX);
-  if (code != 200) goto done;
+  if (code != 200) { SetLastError(code); goto done; }
   DWORD cap = 1 << 16, n = 0, got; char *b = malloc(cap);
+  ULONGLONG start = GetTickCount64();
   for (;;) {
     if (n + 65536 + 1 > cap) { cap *= 2; b = realloc(b, cap); }
+    if (GetTickCount64() - start > (ULONGLONG)timeout * 10) { SetLastError(ERROR_TIMEOUT); free(b); goto done; }   // a file that trickles in forever
     if (!WinHttpReadData(r, b + n, 65536, &got)) { free(b); goto done; }
     if (!got) break;
     n += got;
@@ -593,6 +595,24 @@ typedef struct {
   Manifest *m; int *todo; LONG ntodo; volatile LONG next, fail, files; volatile LONG64 bytes; LONG64 total;
   WCHAR stage[BIG]; char id[64], err[300]; ULONGLONG lastPost; int baseFiles;
 } Dl;
+// %LOCALAPPDATA%\Ruff Dogs\downloads.log: every download step, so a stuck or failed install can be traced
+static CRITICAL_SECTION g_logLock; static int g_logInit;
+static void dlog(const char *fmt, ...) {
+  if (!g_logInit) { InitializeCriticalSection(&g_logLock); g_logInit = 1; }
+  char line[1600]; SYSTEMTIME t; GetLocalTime(&t);
+  int k = snprintf(line, sizeof line, "%04d-%02d-%02d %02d:%02d:%02d  ", t.wYear, t.wMonth, t.wDay, t.wHour, t.wMinute, t.wSecond);
+  va_list a; va_start(a, fmt); k += vsnprintf(line + k, sizeof line - k - 3, fmt, a); va_end(a);
+  if (k > (int)sizeof line - 3) k = sizeof line - 3;
+  line[k++] = '\r'; line[k++] = '\n';
+  EnterCriticalSection(&g_logLock);
+  WCHAR p[BIG]; _snwprintf(p, BIG, L"%ls\\downloads.log", g_data);
+  HANDLE f = CreateFileW(p, FILE_APPEND_DATA, FILE_SHARE_READ, NULL, OPEN_ALWAYS, 0, NULL);
+  if (f != INVALID_HANDLE_VALUE) {
+    LARGE_INTEGER sz; if (GetFileSizeEx(f, &sz) && sz.QuadPart > 4 * 1024 * 1024) { CloseHandle(f); f = CreateFileW(p, GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, 0, NULL); }
+    DWORD w; if (f != INVALID_HANDLE_VALUE) { WriteFile(f, line, k, &w, NULL); CloseHandle(f); }
+  }
+  LeaveCriticalSection(&g_logLock);
+}
 static void progress(Dl *d, const char *phase, int force) {
   ULONGLONG now = GetTickCount64();
   if (!force && now - d->lastPost < 120) return;
@@ -611,10 +631,11 @@ static DWORD WINAPI dl_worker(void *arg) {
     char *data = NULL, h[41]; DWORD n = 0; int ok = 0;
     url_path(url, sizeof url, d->m->base, e->path);
     for (int attempt = 0; attempt < 3 && !ok && !g_cancel; attempt++) {
-      if (http_get(s, url, 60000, &data, &n, NULL)) { git_hash(data, n, h); ok = !strcmp(h, e->hash); if (!ok) { free(data); data = NULL; } }
+      if (http_get(s, url, 30000, &data, &n, NULL)) { git_hash(data, n, h); ok = !strcmp(h, e->hash); if (!ok) { dlog("%s: %s came back different from the file list (try %d)", d->id, e->path, attempt + 1); free(data); data = NULL; } }
+      else dlog("%s: %s didn't download (try %d, error %lu)", d->id, e->path, attempt + 1, GetLastError());
       if (!ok) Sleep(600 * (attempt + 1));
     }
-    if (!ok) { if (!InterlockedExchange(&d->fail, 1)) snprintf(d->err, sizeof d->err, "Couldn't download %s", e->path); break; }
+    if (!ok) { dlog("%s: gave up on %s after 3 tries (%s)", d->id, e->path, url); if (!InterlockedExchange(&d->fail, 1)) snprintf(d->err, sizeof d->err, "Couldn't download %s", e->path); break; }
     WCHAR dst[BIG]; join(dst, d->stage, e->path);
     if (!write_file(dst, data, n)) { free(data); if (!InterlockedExchange(&d->fail, 1)) snprintf(d->err, sizeof d->err, "Couldn't save %s. Is the drive full?", e->path); break; }
     free(data);
@@ -648,8 +669,10 @@ static DWORD WINAPI install_thread(void *arg) {
   CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
   strcpy(d.id, job->id); d.m = &m;
   progress(&d, "manifest", 1);
+  dlog("%s: starting (%s)", job->id, job->manifest);
   HINTERNET s = http_session();
-  if (!fetch_any(s, job->manifest, 20000, &body, &blen) || !manifest_parse(body, &m) || !m.n || !m.base[0]) { err = "Couldn't get the game's file list. Check your internet connection."; goto fail; }
+  if (!fetch_any(s, job->manifest, 20000, &body, &blen) || !manifest_parse(body, &m) || !m.n || !m.base[0]) { dlog("%s: couldn't get the file list (error %lu)", job->id, GetLastError()); err = "Couldn't get the game's file list. Check your internet connection."; goto fail; }
+  dlog("%s: file list has %d files, %lld bytes", job->id, m.n, m.total);
 
   WCHAR name[128], dest[BIG], gameDir[BIG], rec[BIG];
   safe_name(job->title, name, 128);
@@ -671,6 +694,7 @@ static DWORD WINAPI install_thread(void *arg) {
     int same = exists(p) && ((was && !strcmp(was, m.e[i].hash)) || file_matches(p, m.e[i].hash));
     if (same) { d.files++; d.bytes += m.e[i].size; } else d.todo[d.ntodo++] = i;
   }
+  dlog("%s: %d files to download", job->id, d.ntodo);
   progress(&d, "downloading", 1);
   HANDLE th[4]; int nth = d.ntodo < 4 ? d.ntodo : 4;
   for (int i = 0; i < nth; i++) th[i] = CreateThread(NULL, 0, dl_worker, &d, 0, NULL);
@@ -709,9 +733,11 @@ static DWORD WINAPI install_thread(void *arg) {
   SetFileAttributesW(rec, FILE_ATTRIBUTE_HIDDEN);
   inst_set(job->id, dest);
   game_shortcuts(job->id, name, dest, job->shortcut);
+  dlog("%s: done", job->id);
   job_result(job->id, "done", NULL, dest);
   goto done;
 fail:
+  dlog("%s: failed: %s", job->id, err ? err : "?");
   job_result(job->id, "failed", err, NULL);
 done:
   if (s) WinHttpCloseHandle(s);
@@ -799,12 +825,16 @@ static void on_page_message(const char *m) {
   char t[32], id[64]; json_str(m, "t", t, sizeof t); json_str(m, "id", id, sizeof id);
   if (!strcmp(t, "hello")) send_state();
   else if (!strcmp(t, "install")) {
-    if (InterlockedCompareExchange(&g_jobBusy, 1, 0)) { post_simple("{\"t\":\"error\",\"message\":\"Another download is still running.\"}"); return; }
+    if (InterlockedCompareExchange(&g_jobBusy, 1, 0)) { dlog("%s: refused, another download is still running", id); job_result(id, "failed", "Another download is still running. Try again in a moment.", NULL); return; }
     Job *j = calloc(1, sizeof *j);
     strcpy(j->id, id); json_str(m, "title", j->title, sizeof j->title); json_str(m, "commit", j->commit, sizeof j->commit);
     json_str(m, "manifest", j->manifest, sizeof j->manifest); json_str(m, "icon", j->icon, sizeof j->icon);
     j->shortcut = (int)json_num(m, "shortcut", 0);
-    if (!j->id[0] || !j->title[0] || strncmp(j->manifest, "https://", 8) || (j->icon[0] && strncmp(j->icon, "https://", 8))) { free(j); g_jobBusy = 0; return; }
+    if (!j->id[0] || !j->title[0] || strncmp(j->manifest, "https://", 8) || (j->icon[0] && strncmp(j->icon, "https://", 8))) {
+      dlog("%s: refused a bad request (manifest '%s')", id, j->manifest);
+      job_result(id, "failed", "The launcher couldn't start that download. Restart the launcher and try again.", NULL);
+      free(j); g_jobBusy = 0; return;
+    }
     g_cancel = 0;
     CloseHandle(CreateThread(NULL, 0, install_thread, j, 0, NULL));
   }
@@ -880,6 +910,7 @@ static LRESULT CALLBACK wndproc(HWND h, UINT msg, WPARAM wp, LPARAM lp) {
   case WM_PAGEMSG: { char *s = (char *)lp; if (!g_gameMode && s) on_page_message(s); free(s); return 0; }
   case WM_STATE: send_state(); return 0;
   case WM_STARTWEB: create_browser(); return 0;
+  case WM_SETFS: set_fullscreen((int)wp); return 0;
   case WM_PICKFOLDER: pick_folder(); return 0;
   case WM_GAMEEXIT: {
     if (!g_proc) return 0;

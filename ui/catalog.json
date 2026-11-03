@@ -1,6 +1,6 @@
 {
- "version": 1793667476,
- "generated": "2026-11-03T00:57:56Z",
+ "version": 1793670448,
+ "generated": "2026-11-03T01:47:28Z",
  "games": [
   {
    "id": "overdrive",
@@ -17,9 +17,17 @@
    ],
    "rating": "Everyone 10+",
    "color": "#ff3b1f",
-   "commit": "8c97221fde7c05e905c7f70cb006c883de8b1886",
-   "updated": "2026-11-03T00:45:19Z",
+   "commit": "b5fce0c852cde373c8dff98b498d1030c0650c7b",
+   "updated": "2026-11-03T01:47:02Z",
    "notes": [
+    {
+     "date": "2026-11-03",
+     "title": "Radio and start menu in the launcher",
+     "items": [
+      "The radio plays its songs when you play from the Ruff Dogs Launcher.",
+      "OVERDRIVE opens on its own start menu again, with the theme music."
+     ]
+    },
     {
      "date": "2026-11-03",
      "title": "Online works from the launcher",
@@ -64,8 +72,8 @@
      ]
     }
    ],
-   "news": "Online works from the launcher",
-   "size": 6633223,
+   "news": "Radio and start menu in the launcher",
+   "size": 6634455,
    "files": 86,
    "web": "https://rockstarb0i.github.io/OverDrive/",
    "art": {

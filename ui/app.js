@@ -119,7 +119,9 @@ function onNative(m) {
     if (m.autoplay) { const id = m.autoplay; S.native.autoplay = null; setTimeout(() => playOrUpdate(id), 300); }
     render();
   } else if (m.t === 'progress') {
-    S.active = Object.assign(S.active || {}, m);
+    if (S.active && S.active.id !== m.id && m.phase !== 'failed') return;   // a stale message from an earlier job
+    if (!S.active && m.phase !== 'failed') return;
+    S.active = Object.assign(S.active || {}, m, { heard: Date.now() });
     trackSpeed(m);
     if (m.phase === 'done' || m.phase === 'failed' || m.phase === 'cancelled') finishJob(m);
     else { renderProgress(); }
@@ -175,6 +177,14 @@ function finishJob(m) {
   if (S.afterUpdate === m.id && m.phase === 'done') { S.afterUpdate = null; play(m.id); }
   pump(); render();
 }
+// a download that goes quiet for two minutes is called off, so it can't hold up everything queued behind it
+setInterval(() => {
+  const a = S.active;
+  if (a && Date.now() - (a.heard || a.started) > 120000) {
+    Native.send({ t: 'cancel', id: a.id });
+    finishJob({ id: a.id, phase: 'failed', error: 'The download stopped responding. Check your internet connection and try again.' });
+  }
+}, 10000);
 function autoUpdates() {
   if (!S.settings.autoUpdate) return;
   for (const g of S.games) if (needsUpdate(g)) enqueue(g.id, 'update');
