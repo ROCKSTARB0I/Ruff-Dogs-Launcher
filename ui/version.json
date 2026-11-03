@@ -1,9 +1,9 @@
 {
-"version":8,
+"version":9,
 "files":{
 "app.js":"32560c1ae13c48cef095effa1539665a5a089c5e",
 "bridge.js":"a08eb117f9beaa881e376d7dec1368a31bcbee5e",
-"catalog.json":"b2e55cca24f90dea405af15e39b827bd8338cdd5",
+"catalog.json":"4fe8081cf69ff69bb8726adc51528975fb0b44bb",
 "config.json":"547a659321b648600a8e240894c964df326e1067",
 "index.html":"2ef08913256e2953ab4a185642f48ce1ae554e05",
 "style.css":"d0f0c94eb1772a4924b26002aed2b2ceee366401",
