@@ -541,14 +541,28 @@ static void link_paths(const WCHAR *name, WCHAR *desk, WCHAR *menu) {
   if (desk) { SHGetFolderPathW(NULL, CSIDL_DESKTOPDIRECTORY, NULL, 0, d); _snwprintf(desk, BIG, L"%ls\\%ls.lnk", d, name); }
   if (menu) { SHGetFolderPathW(NULL, CSIDL_PROGRAMS, NULL, 0, d); _snwprintf(menu, BIG, L"%ls\\Ruff Dogs\\%ls.lnk", d, name); }
 }
-// a game's shortcuts start it through the launcher (so it updates first), showing the game's own icon
+// a game's shortcuts point at the game's own .exe in its folder ("Open file location" lands there); the game checks
+// for an update itself when it starts and hands over to the launcher if there is one (see game_needs_update)
 static void game_shortcuts(const char *id, const WCHAR *name, const WCHAR *dir, int desktop) {
-  WCHAR exe[BIG], args[128], desk[BIG], menu[BIG];
+  (void)id;
+  WCHAR exe[BIG], desk[BIG], menu[BIG];
   _snwprintf(exe, BIG, L"%ls\\%ls.exe", dir, name);
-  WCHAR *wid = widen(id); _snwprintf(args, 128, L"--play %ls", wid); free(wid);
   link_paths(name, desk, menu);
-  make_link(menu, g_self, args, exe, dir, name);
-  if (desktop) make_link(desk, g_self, args, exe, dir, name);
+  make_link(menu, exe, NULL, exe, dir, name);
+  if (desktop) make_link(desk, exe, NULL, exe, dir, name);
+}
+// shortcuts made by older launchers pointed at the launcher itself: re-point any that exist at the game's own .exe
+static void refresh_shortcuts(void) {
+  for (int i = 0; i < g_instN; i++) {
+    WCHAR rec[BIG]; _snwprintf(rec, BIG, L"%ls\\ruffdogs-game.json", g_inst[i].dir);
+    char *j = read_file(rec, NULL), exe[128] = ""; json_str(j, "exe", exe, sizeof exe); free(j);
+    if (!exe[0]) continue;
+    WCHAR *w = widen(exe), desk[BIG], menu[BIG], target[BIG];
+    link_paths(w, desk, menu); _snwprintf(target, BIG, L"%ls\\%ls.exe", g_inst[i].dir, w);
+    if (exists(menu)) make_link(menu, target, NULL, target, g_inst[i].dir, w);
+    if (exists(desk)) make_link(desk, target, NULL, target, g_inst[i].dir, w);
+    free(w);
+  }
 }
 // writes a .ico file into an .exe as its icon (resource group 1, which Explorer and the taskbar show)
 static int set_exe_icon(const WCHAR *exe, const unsigned char *ico, DWORD n) {
@@ -1163,6 +1177,41 @@ static int self_install(PWSTR cmd) {
   return 1;
 }
 
+// where the launcher is installed (Setup records it; the launcher's own first-run install uses the default)
+static void launcher_path(WCHAR *exe) {
+  WCHAR dir[BIG]; DWORD n = sizeof dir;
+  if (RegGetValueW(HKEY_CURRENT_USER, L"Software\\Ruff Dogs\\Launcher", L"InstallDir", RRF_RT_REG_SZ, NULL, dir, &n) != ERROR_SUCCESS || !dir[0]) {
+    WCHAR la[MAX_PATH]; SHGetFolderPathW(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, la);
+    _snwprintf(dir, BIG, L"%ls\\Programs\\Ruff Dogs Launcher", la);
+  }
+  _snwprintf(exe, BIG, L"%ls\\RuffDogsLauncher.exe", dir);
+}
+// GAME mode started straight from its shortcut: if the store has a newer version of this game, let the launcher
+// update it and start it (returns 1 when it handed over). No internet, or no launcher: just play what's installed.
+static int game_needs_update(const char *haveCommit) {
+  if (!haveCommit[0]) return 0;
+  WCHAR lexe[BIG]; launcher_path(lexe);
+  if (!exists(lexe)) return 0;
+  HINTERNET s = http_session(); char base[700], url[800], *cat = NULL; DWORD n; int handed = 0;
+  fresh_base(s, g_repo, g_branch, g_uiPath, base, sizeof base);
+  snprintf(url, sizeof url, "%scatalog.json", base);
+  if (http_get(s, url, 5000, &cat, &n, NULL)) {
+    char key[96]; snprintf(key, sizeof key, "\"id\": \"%s\"", g_gameId);
+    const char *at = strstr(cat, key); char want[64] = "";
+    if (at) json_str(at, "commit", want, sizeof want);
+    if (want[0] && strcmp(want, haveCommit)) {
+      WCHAR line[BIG * 2], *wid = widen(g_gameId), dir[BIG];
+      _snwprintf(line, BIG * 2, L"\"%ls\" --play %ls", lexe, wid); free(wid);
+      wcscpy(dir, lexe); PathRemoveFileSpecW(dir);
+      STARTUPINFOW si = { sizeof si }; PROCESS_INFORMATION pi;
+      if (CreateProcessW(lexe, line, NULL, NULL, FALSE, 0, NULL, dir, &si, &pi)) { CloseHandle(pi.hThread); CloseHandle(pi.hProcess); handed = 1; }
+    }
+    free(cat);
+  }
+  if (s) WinHttpCloseHandle(s);
+  return handed;
+}
+
 int WINAPI wWinMain(HINSTANCE inst, HINSTANCE prev, PWSTR cmd, int show) {
   (void)prev;
   InitializeCriticalSection(&g_pakLock); InitializeCriticalSection(&g_instLock);
@@ -1180,10 +1229,12 @@ int WINAPI wWinMain(HINSTANCE inst, HINSTANCE prev, PWSTR cmd, int show) {
   char *gj = read_file(rec, NULL);
   if (gj) {
     g_gameMode = 1;
-    json_str(gj, "id", g_gameId, sizeof g_gameId); json_str(gj, "title", g_gameTitle, sizeof g_gameTitle); free(gj);
+    char commit[64] = "";
+    json_str(gj, "id", g_gameId, sizeof g_gameId); json_str(gj, "title", g_gameTitle, sizeof g_gameTitle); json_str(gj, "commit", commit, sizeof commit); free(gj);
     for (char *c = g_gameId; *c; c++) if (!(isalnum((unsigned char)*c) || *c == '-')) *c = '-';
     if (!g_gameId[0]) strcpy(g_gameId, "game");
     _snwprintf(g_gameDir, BIG, L"%ls\\game", here);
+    if (!wcsstr(GetCommandLineW(), L"--from-launcher") && pak_open()) { load_config(); if (game_needs_update(commit)) return 0; }
   } else {
     int argc; LPWSTR *argv = CommandLineToArgvW(GetCommandLineW(), &argc);
     for (int i = 1; i + 1 < argc; i++) if (!wcscmp(argv[i], L"--play")) { char *s = narrow(argv[i + 1]); strncpy(g_autoplay, s, 63); free(s); }
@@ -1203,6 +1254,7 @@ int WINAPI wWinMain(HINSTANCE inst, HINSTANCE prev, PWSTR cmd, int show) {
     _snwprintf(g_uiNext, BIG, L"%ls\\ui-next", g_data);
     settings_load();
     inst_load();
+    refresh_shortcuts();
   }
 
   WNDCLASSEXW wc = { sizeof wc };

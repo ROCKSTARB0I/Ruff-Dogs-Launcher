@@ -1,6 +1,8 @@
 // Ruff Dogs Setup: the installer for the Ruff Dogs Launcher. One small Windows program with its own art and screens:
 // Welcome -> Terms -> Location -> Installing -> Done. The launcher itself rides on the end of this .exe:
-//   [setup program][RuffDogsLauncher.exe bytes]["RDSETUP1"][u64 offset][u64 length]
+//   [setup program][RuffDogsLauncher.exe][engine.tar.gz]["RDSETUP2"][u64 exe offset, length][u64 engine offset, length][engine version, 32 bytes]
+// The engine is our own Chromium (CEF). It goes in %LOCALAPPDATA%\Ruff Dogs\Engine\<version> once, and the launcher and
+// every installed game run on it. Windows' own tar.exe (Windows 10 1803 and later) unpacks it.
 // Installs per-user (no admin prompt) and registers itself in Windows "Installed apps". A copy of this program is left in the
 // install folder as "Uninstall Ruff Dogs.exe"; run with --uninstall it removes the launcher (games and saves stay).
 #define COBJMACROS
@@ -13,6 +15,7 @@
 #include <shobjidl.h>
 #include <dwmapi.h>
 #include <gdiplus.h>
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -69,22 +72,57 @@ static int make_link(const WCHAR *lnk, const WCHAR *target, const WCHAR *dir) {
   if (SUCCEEDED(IShellLinkW_QueryInterface(sl, &IID_IPersistFile, (void **)&pf))) { ok = SUCCEEDED(IPersistFile_Save(pf, lnk, TRUE)); IPersistFile_Release(pf); }
   IShellLinkW_Release(sl); return ok;
 }
-// the launcher bytes carried on the end of this .exe
-static unsigned char *payload(DWORD *len) {
+// what rides on the end of this .exe (see the top of the file)
+typedef struct { unsigned long long exeOff, exeLen, engOff, engLen; char engVer[33]; } Payload;
+static int payload_info(Payload *p) {
+  memset(p, 0, sizeof *p);
   HANDLE f = CreateFileW(g_self, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
-  if (f == INVALID_HANDLE_VALUE) return NULL;
+  if (f == INVALID_HANDLE_VALUE) return 0;
   LARGE_INTEGER sz; GetFileSizeEx(f, &sz);
-  unsigned char foot[24]; DWORD got; LARGE_INTEGER at; at.QuadPart = sz.QuadPart - 24;
-  unsigned char *buf = NULL;
-  if (sz.QuadPart > 24 && SetFilePointerEx(f, at, NULL, FILE_BEGIN) && ReadFile(f, foot, 24, &got, NULL) && got == 24 && !memcmp(foot, "RDSETUP1", 8)) {
-    unsigned long long off, n; memcpy(&off, foot + 8, 8); memcpy(&n, foot + 16, 8);
-    if (off + n <= (unsigned long long)sz.QuadPart && n < 512u * 1024 * 1024) {
-      at.QuadPart = off; buf = malloc((size_t)n);
-      if (buf && SetFilePointerEx(f, at, NULL, FILE_BEGIN) && ReadFile(f, buf, (DWORD)n, &got, NULL) && got == n) *len = (DWORD)n;
-      else { free(buf); buf = NULL; }
-    }
+  unsigned char foot[72]; DWORD got; LARGE_INTEGER at; at.QuadPart = sz.QuadPart - 72; int ok = 0;
+  if (sz.QuadPart > 72 && SetFilePointerEx(f, at, NULL, FILE_BEGIN) && ReadFile(f, foot, 72, &got, NULL) && got == 72 && !memcmp(foot, "RDSETUP2", 8)) {
+    memcpy(&p->exeOff, foot + 8, 8); memcpy(&p->exeLen, foot + 16, 8); memcpy(&p->engOff, foot + 24, 8); memcpy(&p->engLen, foot + 32, 8);
+    memcpy(p->engVer, foot + 40, 32); p->engVer[32] = 0;
+    ok = p->exeOff + p->exeLen <= (unsigned long long)sz.QuadPart && p->engOff + p->engLen <= (unsigned long long)sz.QuadPart && p->exeLen && p->engVer[0];
+    for (char *c = p->engVer; *c; c++) if (!(isalnum((unsigned char)*c) || *c == '.' || *c == '-')) ok = 0;
   }
-  CloseHandle(f); return buf;
+  CloseHandle(f); return ok;
+}
+// copies [off, off+len) of this .exe into a new file, moving the bar from p0 to p1
+static int copy_out(unsigned long long off, unsigned long long len, const WCHAR *to, float p0, float p1, const WCHAR *what) {
+  HANDLE in = CreateFileW(g_self, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, NULL);
+  if (in == INVALID_HANDLE_VALUE) return 0;
+  HANDLE out = CreateFileW(to, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+  if (out == INVALID_HANDLE_VALUE) { CloseHandle(in); return 0; }
+  LARGE_INTEGER at; at.QuadPart = (LONGLONG)off; SetFilePointerEx(in, at, NULL, FILE_BEGIN);
+  static unsigned char buf[1 << 20]; unsigned long long done = 0; int ok = 1;
+  while (ok && done < len) {
+    DWORD want = (DWORD)(len - done < sizeof buf ? len - done : sizeof buf), got = 0, put = 0;
+    ok = ReadFile(in, buf, want, &got, NULL) && got == want && WriteFile(out, buf, got, &put, NULL) && put == got;
+    done += got; step(p0 + (p1 - p0) * (float)done / (float)len, what);
+  }
+  CloseHandle(in); CloseHandle(out);
+  if (!ok) DeleteFileW(to);
+  return ok;
+}
+// unpacks the engine with Windows' tar.exe, nudging the bar along while it works
+static int unpack_engine(const WCHAR *archive, const WCHAR *dir, float p0, float p1) {
+  WCHAR tar[MAX_PATH], line[BIG * 3]; GetSystemDirectoryW(tar, MAX_PATH); wcscat(tar, L"\\tar.exe");
+  if (!exists(tar)) return -1;
+  SHCreateDirectoryExW(NULL, dir, NULL);
+  _snwprintf(line, BIG * 3, L"\"%ls\" -xzf \"%ls\" -C \"%ls\"", tar, archive, dir);
+  STARTUPINFOW si = { sizeof si }; si.dwFlags = STARTF_USESHOWWINDOW; si.wShowWindow = SW_HIDE; PROCESS_INFORMATION pi;
+  if (!CreateProcessW(tar, line, NULL, NULL, FALSE, CREATE_NO_WINDOW, NULL, dir, &si, &pi)) return 0;
+  CloseHandle(pi.hThread);
+  float p = p0;
+  while (WaitForSingleObject(pi.hProcess, 150) == WAIT_TIMEOUT) { p += (p1 - p) * 0.012f; step(p, L"Installing the game engine (our own Chromium)\x2026"); }
+  DWORD code = 1; GetExitCodeProcess(pi.hProcess, &code); CloseHandle(pi.hProcess);
+  return code == 0;
+}
+static void engine_dir(const char *ver, WCHAR *out) {
+  WCHAR la[MAX_PATH]; SHGetFolderPathW(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, la);
+  WCHAR v[40]; MultiByteToWideChar(CP_UTF8, 0, ver, -1, v, 40);
+  _snwprintf(out, BIG, L"%ls\\Ruff Dogs\\Engine\\%ls", la, v);
 }
 // asks a running launcher to close and waits for it (it can't be replaced while it runs)
 static int close_launcher(void) {
@@ -106,40 +144,49 @@ static void reg_dword(HKEY k, const WCHAR *name, DWORD v) { RegSetValueExW(k, na
 // ---------------------------------------------------------------------------------------------------------- install / remove
 static DWORD WINAPI install_thread(void *arg) {
   (void)arg; CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
-  WCHAR exe[BIG], unin[BIG], tmp[BIG];
-  step(0.03f, L"Getting ready\x2026"); Sleep(350);
-  DWORD n = 0; unsigned char *data = payload(&n);
-  if (!data) { fail(L"This setup file is damaged. Please download it again."); return 0; }
-  step(0.08f, L"Closing the launcher if it's open\x2026");
-  if (!close_launcher()) { free(data); fail(L"The Ruff Dogs Launcher is still open. Close it and try again."); return 0; }
-  if (SHCreateDirectoryExW(NULL, g_dir, NULL) != ERROR_SUCCESS && !PathIsDirectoryW(g_dir)) { free(data); fail(L"Couldn't make that folder. Pick another place to install."); return 0; }
+  WCHAR exe[BIG], unin[BIG], tmp[BIG], eng[BIG], engTmp[BIG], arc[BIG], ready[BIG];
+  Payload pl;
+  step(0.03f, L"Getting ready\x2026"); Sleep(300);
+  if (!payload_info(&pl)) { fail(L"This setup file is damaged. Please download it again."); return 0; }
+  step(0.06f, L"Closing the launcher if it's open\x2026");
+  if (!close_launcher()) { fail(L"The Ruff Dogs Launcher is still open. Close it and try again."); return 0; }
+  if (SHCreateDirectoryExW(NULL, g_dir, NULL) != ERROR_SUCCESS && !PathIsDirectoryW(g_dir)) { fail(L"Couldn't make that folder. Pick another place to install."); return 0; }
   _snwprintf(exe, BIG, L"%ls\\RuffDogsLauncher.exe", g_dir);
   _snwprintf(tmp, BIG, L"%ls\\RuffDogsLauncher.exe.new", g_dir);
   _snwprintf(unin, BIG, L"%ls\\Uninstall Ruff Dogs.exe", g_dir);
-  // write the launcher in chunks so the bar moves, then swap it into place
-  HANDLE f = CreateFileW(tmp, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-  if (f == INVALID_HANDLE_VALUE) { free(data); fail(L"Couldn't write to that folder. Pick another place to install."); return 0; }
-  DWORD done = 0, chunk = 64 * 1024, w;
-  while (done < n) {
-    DWORD c = n - done < chunk ? n - done : chunk;
-    if (!WriteFile(f, data + done, c, &w, NULL)) { CloseHandle(f); DeleteFileW(tmp); free(data); fail(L"Ran out of room on that drive."); return 0; }
-    done += c; step(0.10f + 0.55f * done / n, L"Copying the Ruff Dogs Launcher\x2026"); Sleep(18);
-  }
-  CloseHandle(f); free(data);
+  // the launcher: written next to the old one, then swapped into place
+  if (!copy_out(pl.exeOff, pl.exeLen, tmp, 0.08f, 0.16f, L"Copying the Ruff Dogs Launcher\x2026")) { fail(L"Couldn't write to that folder, or the drive is full. Pick another place to install."); return 0; }
   if (!MoveFileExW(tmp, exe, MOVEFILE_REPLACE_EXISTING)) { DeleteFileW(tmp); fail(L"Couldn't replace the old launcher. Restart your PC and try again."); return 0; }
-  step(0.70f, L"Adding the uninstaller\x2026"); Sleep(200);
-  if (_wcsicmp(unin, g_self)) CopyFileW(g_self, unin, FALSE);
-  step(0.80f, L"Adding shortcuts\x2026"); Sleep(250);
+  // the engine: once per version, shared by the launcher and every game
+  engine_dir(pl.engVer, eng); _snwprintf(ready, BIG, L"%ls\\ready", eng);
+  if (!exists(ready)) {
+    WCHAR t[MAX_PATH]; GetTempPathW(MAX_PATH, t);
+    _snwprintf(arc, BIG, L"%lsRuffDogsEngine.tar.gz", t); _snwprintf(engTmp, BIG, L"%ls.new", eng);
+    SHFILEOPSTRUCTW op = { 0 }; WCHAR from[BIG + 2]; memset(from, 0, sizeof from); wcsncpy(from, engTmp, BIG - 1);
+    op.wFunc = FO_DELETE; op.pFrom = from; op.fFlags = FOF_NO_UI; if (exists(engTmp)) SHFileOperationW(&op);
+    if (!copy_out(pl.engOff, pl.engLen, arc, 0.17f, 0.30f, L"Unpacking the game engine\x2026")) { fail(L"Ran out of room on your C: drive. The game engine needs about 400 MB free."); return 0; }
+    int r = unpack_engine(arc, engTmp, 0.30f, 0.90f);
+    DeleteFileW(arc);
+    if (r < 0) { fail(L"This version of Windows is missing tar.exe, which Setup uses to unpack the game engine. Please run Windows Update and try again."); return 0; }
+    if (!r) { if (exists(engTmp)) SHFileOperationW(&op); fail(L"Couldn't unpack the game engine. Make sure your C: drive has about 400 MB free, then try again."); return 0; }
+    if (exists(eng)) { WCHAR f2[BIG + 2]; memset(f2, 0, sizeof f2); wcsncpy(f2, eng, BIG - 1); op.pFrom = f2; SHFileOperationW(&op); }
+    if (!MoveFileExW(engTmp, eng, 0)) { fail(L"Couldn't put the game engine in place. Restart your PC and try again."); return 0; }
+    HANDLE rf = CreateFileW(ready, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL); if (rf != INVALID_HANDLE_VALUE) CloseHandle(rf);
+  }
+  // the uninstaller: just the setup program itself (without the launcher and engine riding on the end)
+  step(0.91f, L"Adding the uninstaller\x2026"); Sleep(150);
+  if (_wcsicmp(unin, g_self)) copy_out(0, pl.exeOff, unin, 0.91f, 0.92f, L"Adding the uninstaller\x2026");
+  step(0.94f, L"Adding shortcuts\x2026"); Sleep(250);
   WCHAR desk[BIG], menu[BIG]; link_paths(desk, menu);
   if (g_menu) make_link(menu, exe, g_dir); else DeleteFileW(menu);
   if (g_desk) make_link(desk, exe, g_dir); else DeleteFileW(desk);
-  step(0.90f, L"Adding Ruff Dogs to your installed apps\x2026"); Sleep(250);
+  step(0.97f, L"Adding Ruff Dogs to your installed apps\x2026"); Sleep(250);
   HKEY k;
   if (RegCreateKeyExW(HKEY_CURRENT_USER, UNINSTALL_KEY, 0, NULL, 0, KEY_WRITE, NULL, &k, NULL) == ERROR_SUCCESS) {
     WCHAR cmd[BIG + 32]; _snwprintf(cmd, BIG + 32, L"\"%ls\" --uninstall", unin);
     reg_str(k, L"DisplayName", L"Ruff Dogs Launcher"); reg_str(k, L"DisplayIcon", exe); reg_str(k, L"DisplayVersion", L"1.0.0");
     reg_str(k, L"Publisher", L"Ruff Dogs Studios"); reg_str(k, L"InstallLocation", g_dir); reg_str(k, L"UninstallString", cmd);
-    reg_dword(k, L"NoModify", 1); reg_dword(k, L"NoRepair", 1); reg_dword(k, L"EstimatedSize", (n / 1024) * 2 + 64);
+    reg_dword(k, L"NoModify", 1); reg_dword(k, L"NoRepair", 1); reg_dword(k, L"EstimatedSize", (DWORD)((pl.exeLen + pl.engLen * 3) / 1024));
     RegCloseKey(k);
   }
   if (RegCreateKeyExW(HKEY_CURRENT_USER, L"Software\\Ruff Dogs\\Launcher", 0, NULL, 0, KEY_WRITE, NULL, &k, NULL) == ERROR_SUCCESS) {
@@ -322,7 +369,7 @@ static void paint(HDC dc) {
          x, 236, w, 90, 15.5f, 0, 0, C_DIM, 0, 0);
     fill_rr(x, 330, w, 66, 9, C_PANEL); stroke_rr(x + .5f, 330.5f, w - 1, 65, 9, C_LINE, 1);
     text(L"FREE", x + 18, 330, 70, 66, 20, 1, 1, 0xff6be08a, 0, 1);
-    text(L"Every game is free. No real money, ever.\nIt takes about 20 MB and a few seconds.", x + 86, 330, w - 100, 66, 14, 0, 0, C_TEXT, 0, 1);
+    text(L"Every game is free. No real money, ever.\nIt needs about 450 MB, mostly the game engine.", x + 86, 330, w - 100, 66, 14, 0, 0, C_TEXT, 0, 1);
     button(L"CANCEL", W_ - 44 - 130 - 12 - 150, by, 130, B_CANCEL, 0, 1);
     button(L"NEXT", W_ - 44 - 150, by, 150, B_NEXT, 1, 1);
     break;
@@ -355,7 +402,7 @@ static void paint(HDC dc) {
     fill_rr(x, 218, w - 120, 40, 7, 0xff15130f); stroke_rr(x + .5f, 218.5f, w - 121, 39, 7, g_hover == B_BROWSE ? 0xff4a4237 : 0xff3a342b, 1);
     { float bw = 108; int hov = g_hover == B_BROWSE; fill_rr(x + w - bw, 218, bw, 40, 7, hov ? 0xff2a2620 : 0xff1d1a16); stroke_rr(x + w - bw + .5f, 218.5f, bw - 1, 39, 7, C_LINE, 1);
       text(L"BROWSE", x + w - bw, 218, bw, 40, 14, 1, 0, C_TEXT, 1, 1); hit(x + w - bw, 218, bw, 40, B_BROWSE, 1); }
-    text(L"Needs about 20 MB.", x, 264, w, 20, 13, 0, 0, 0xff7d766b, 0, 0);
+    text(L"Needs about 450 MB (the launcher and its game engine).", x, 264, w, 20, 13, 0, 0, 0xff7d766b, 0, 0);
     checkbox(L"Put a shortcut on my desktop", x, 306, w, B_DESK, g_desk);
     checkbox(L"Add it to the Start menu", x, 340, w, B_MENU, g_menu);
     button(L"BACK", W_ - 44 - 130 - 12 - 170, by, 130, B_BACK, 0, 1);
@@ -364,7 +411,7 @@ static void paint(HDC dc) {
   case P_INSTALL: case P_REMOVING:
     if (g_page == P_INSTALL) steps_bar(3);
     heading(g_page == P_INSTALL ? (g_update ? L"Updating\x2026" : L"Installing\x2026") : L"Removing\x2026",
-            g_page == P_INSTALL ? L"Hang tight, this only takes a few seconds." : L"Taking the launcher off this PC.", 120);
+            g_page == P_INSTALL ? L"Hang tight, this takes about a minute." : L"Taking the launcher off this PC.", 120);
     draw_progress(g_prog, g_status);
     break;
   case P_DONE:

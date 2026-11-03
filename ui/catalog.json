@@ -1,6 +1,6 @@
 {
- "version": 1793666755,
- "generated": "2026-11-03T00:45:55Z",
+ "version": 1793667414,
+ "generated": "2026-11-03T00:56:54Z",
  "games": [
   {
    "id": "overdrive",
@@ -354,14 +354,26 @@
    ],
    "rating": "Mature 17+",
    "color": "#ff8a1f",
-   "commit": "622919f7f6ef1e4dc96dbd99a56275864b7750d3",
-   "updated": "2026-11-03T00:33:59Z",
+   "commit": "4218cfce6c0fd5759eb2b9cfcefda45c89661e19",
+   "updated": "2026-11-03T00:55:05Z",
    "notes": [
     {
      "date": "2026-11-03",
      "title": "Update",
      "items": [
       "Fixes and improvements."
+     ]
+    },
+    {
+     "date": "2026-11-02",
+     "title": "The night he came home",
+     "items": [
+      "Now a story in five chapters: Nichols Hardware, Haddonfield High, Judith's Grave, Halloween Night and The Final Girl. Finish one to unlock the next.",
+      "A much bigger Haddonfield: Main Street and its shops, the alley behind them, Haddonfield High, the cemetery, and Lampkin Lane joined up by the avenues.",
+      "Stealth chapters: if the sheriff, Loomis or Laurie gets a good look at you, you start that chapter over.",
+      "Cutscenes instead of captions: an opening shot for every chapter, the mask going on, and the ending told the way the film tells it.",
+      "Michael stays in the shadows in cutscenes, with only the pale mask catching the light.",
+      "Getting knocked down is now a real fall: you hit the floor, then sit up."
      ]
     },
     {
@@ -387,8 +399,8 @@
     }
    ],
    "news": "Fixes and improvements.",
-   "size": 1561179,
-   "files": 18,
+   "size": 1637490,
+   "files": 21,
    "web": "https://rockstarb0i.github.io/HALLOWEENVR/",
    "art": {
     "cover": "art/halloweenvr/cover.jpg",
