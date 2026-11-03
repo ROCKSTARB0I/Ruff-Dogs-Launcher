@@ -3,6 +3,13 @@
   "overdrive": [
     {
       "date": "2026-11-03",
+      "title": "The REDLINE intro is back",
+      "items": [
+        "The Ruff Dogs REDLINE intro plays again when you start OVERDRIVE from the launcher."
+      ]
+    },
+    {
+      "date": "2026-11-03",
       "title": "Radio and start menu in the launcher",
       "items": [
         "The radio plays its songs when you play from the Ruff Dogs Launcher.",

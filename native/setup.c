@@ -569,10 +569,14 @@ int WINAPI wWinMain(HINSTANCE inst, HINSTANCE prev, PWSTR cmd, int show) {
 
   // --uninstall [dir]: Windows "Installed apps" runs the copy in the install folder. That copy can't delete itself, so it
   // copies itself to %TEMP% and runs from there with the folder to remove.
+  // The uninstaller is a copy of this program with nothing riding on the end, so opened any other way (a double-click
+  // on "Uninstall Ruff Dogs.exe") it still uninstalls rather than pretending to be Setup.
   int argc; LPWSTR *argv = CommandLineToArgvW(GetCommandLineW(), &argc);
-  for (int i = 1; i < argc; i++) if (!wcscmp(argv[i], L"--uninstall")) {
+  Payload probe; int bare = !payload_info(&probe), asked = 0;
+  for (int i = 1; i < argc; i++) if (!wcscmp(argv[i], L"--uninstall")) asked = i;
+  if (asked || bare) {
     g_uninstall = 1;
-    if (i + 1 < argc) wcsncpy(g_removeDir, argv[i + 1], BIG - 1);
+    if (asked && asked + 1 < argc) wcsncpy(g_removeDir, argv[asked + 1], BIG - 1);
     else {
       wcscpy(g_removeDir, g_self); PathRemoveFileSpecW(g_removeDir);
       WCHAR tmp[MAX_PATH], copy[BIG], line[BIG * 3]; GetTempPathW(MAX_PATH, tmp);

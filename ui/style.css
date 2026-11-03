@@ -472,3 +472,9 @@ body { background: radial-gradient(1200px 500px at 50% -120px, #1c1a16, transpar
 .gr.all { color: var(--gold2); font-size: 12.5px; border-top: 1px solid #2c3139; justify-content: center; }
 .gr.none { color: var(--dim); cursor: default; } .gr.none:hover { background: none; }
 @media (max-width: 900px) { .gsearch { flex-basis: 160px; } .gsearch kbd { display: none; } }
+
+/* launcher update ready */
+#appbar { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); z-index: 55; display: flex; align-items: center; gap: 12px; padding: 10px 12px 10px 16px; border-radius: 4px; background: linear-gradient(#262a31, #1b1e24); border: 1px solid #3a3f48; box-shadow: 0 14px 40px #000c; }
+#appbar span { color: var(--dim); font-size: 13px; }
+#appbar .x { border: 0; background: none; color: var(--dim); font-size: 20px; line-height: 1; padding: 0 4px; }
+#appbar .x:hover { color: #fff; }

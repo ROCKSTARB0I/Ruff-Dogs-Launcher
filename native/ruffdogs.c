@@ -34,7 +34,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define APP_VERSION "1.1.0"
+#define APP_VERSION "1.2.0"
+#define APP_BUILD 3                     // bump on every launcher release: installed launchers update themselves to a higher build
 #define ENGINE_VER "150.0.23"          // the CEF build this program runs on (see cefhost.h); Setup installs it
 #define LHOST L"https://launcher.ruffdogs/"
 #define LHOST_A "https://launcher.ruffdogs/"
@@ -438,6 +439,106 @@ out:
   return 0;
 }
 
+static void dlog(const char *fmt, ...);
+// ================================================================================================ launcher self-update (the program)
+// tools/publish.py puts the newest RuffDogsLauncher.exe in the repo's app/ folder with app/launcher.json:
+//   {"build": N, "hash": "<git blob sha1>", "size": bytes, "engine": "<CEF version>", "engineUrl": "https://...tar.gz"}
+// A higher build is downloaded next to this .exe, checked, and swapped in (Windows lets a running .exe be renamed);
+// the next start runs it. A build that needs a newer engine fetches that first from the repo's GitHub release.
+static int http_to_file(HINTERNET s, const char *url, const WCHAR *path) {
+  WCHAR *w = widen(url), host[256], upath[4096], extra[1024];
+  URL_COMPONENTS uc = { sizeof uc };
+  uc.lpszHostName = host; uc.dwHostNameLength = 256; uc.lpszUrlPath = upath; uc.dwUrlPathLength = 4096;
+  uc.lpszExtraInfo = extra; uc.dwExtraInfoLength = 1024;
+  int ok = 0; HINTERNET c = NULL, r = NULL; HANDLE f = INVALID_HANDLE_VALUE;
+  if (!WinHttpCrackUrl(w, 0, 0, &uc)) goto done;
+  wcsncat(upath, extra, 4095 - wcslen(upath));
+  WinHttpSetTimeouts(s, 30000, 30000, 30000, 60000);
+  c = WinHttpConnect(s, host, uc.nPort, 0); if (!c) goto done;
+  r = WinHttpOpenRequest(c, L"GET", upath, NULL, WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES, uc.nScheme == INTERNET_SCHEME_HTTPS ? WINHTTP_FLAG_SECURE : 0);
+  if (!r || !WinHttpSendRequest(r, WINHTTP_NO_ADDITIONAL_HEADERS, 0, WINHTTP_NO_REQUEST_DATA, 0, 0, 0) || !WinHttpReceiveResponse(r, NULL)) goto done;
+  DWORD code = 0, cl = sizeof code;
+  WinHttpQueryHeaders(r, WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER, WINHTTP_HEADER_NAME_BY_INDEX, &code, &cl, WINHTTP_NO_HEADER_INDEX);
+  if (code != 200) goto done;
+  f = CreateFileW(path, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, NULL); if (f == INVALID_HANDLE_VALUE) goto done;
+  static char buf[1 << 16]; DWORD got, put;
+  for (;;) {
+    if (!WinHttpReadData(r, buf, sizeof buf, &got)) goto done;
+    if (!got) break;
+    if (!WriteFile(f, buf, got, &put, NULL) || put != got) goto done;
+  }
+  ok = 1;
+done:
+  if (f != INVALID_HANDLE_VALUE) { CloseHandle(f); if (!ok) DeleteFileW(path); }
+  if (r) WinHttpCloseHandle(r);
+  if (c) WinHttpCloseHandle(c);
+  free(w); return ok;
+}
+static int engine_ready(const char *ver) {
+  WCHAR la[MAX_PATH], p[BIG], *wv = widen(ver); SHGetFolderPathW(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, la);
+  _snwprintf(p, BIG, L"%ls\\Ruff Dogs\\Engine\\%ls\\libcef.dll", la, wv); free(wv);
+  return exists(p);
+}
+static int fetch_engine(HINTERNET s, const char *ver, const char *url) {
+  for (const char *c = ver; *c; c++) if (!(isalnum((unsigned char)*c) || *c == '.' || *c == '-')) return 0;
+  if (strncmp(url, "https://", 8)) return 0;
+  WCHAR la[MAX_PATH], tmp[MAX_PATH], arc[BIG], dir[BIG], next[BIG], tar[MAX_PATH], line[BIG * 3], *wv = widen(ver);
+  SHGetFolderPathW(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, la); GetTempPathW(MAX_PATH, tmp);
+  _snwprintf(dir, BIG, L"%ls\\Ruff Dogs\\Engine\\%ls", la, wv); _snwprintf(next, BIG, L"%ls.new", dir);
+  _snwprintf(arc, BIG, L"%lsRuffDogsEngine-%ls.tar.gz", tmp, wv); free(wv);
+  dlog("launcher: downloading engine %s", ver);
+  if (!http_to_file(s, url, arc)) { dlog("launcher: engine download failed"); return 0; }
+  remove_tree(next); SHCreateDirectoryExW(NULL, next, NULL);
+  GetSystemDirectoryW(tar, MAX_PATH); wcscat(tar, L"\\tar.exe");
+  _snwprintf(line, BIG * 3, L"\"%ls\" -xzf \"%ls\" -C \"%ls\"", tar, arc, next);
+  STARTUPINFOW si = { sizeof si }; si.dwFlags = STARTF_USESHOWWINDOW; si.wShowWindow = SW_HIDE; PROCESS_INFORMATION pi; DWORD code = 1;
+  if (CreateProcessW(tar, line, NULL, NULL, FALSE, CREATE_NO_WINDOW, NULL, next, &si, &pi)) {
+    WaitForSingleObject(pi.hProcess, INFINITE); GetExitCodeProcess(pi.hProcess, &code); CloseHandle(pi.hProcess); CloseHandle(pi.hThread);
+  }
+  DeleteFileW(arc);
+  if (code) { dlog("launcher: engine unpack failed (%lu)", code); remove_tree(next); return 0; }
+  remove_tree(dir);
+  if (!MoveFileExW(next, dir, 0)) { remove_tree(next); return 0; }
+  WCHAR ready[BIG]; _snwprintf(ready, BIG, L"%ls\\ready", dir); write_file(ready, "", 0);
+  return 1;
+}
+static volatile LONG g_appChecking;
+static void app_status(const char *state, long long build) { post_simple("{\"t\":\"app-status\",\"state\":\"%s\",\"build\":%lld,\"have\":%d}", state, build, APP_BUILD); }
+static DWORD WINAPI app_update_thread(void *arg) {
+  (void)arg;
+  if (InterlockedCompareExchange(&g_appChecking, 1, 0)) return 0;
+  const char *state = "failed"; long long build = 0;
+  WCHAR old[BIG]; _snwprintf(old, BIG, L"%ls.old", g_self); DeleteFileW(old);   // left over from the last update
+  app_status("checking", 0);
+  HINTERNET s = http_session(); char base[700], url[900], *j = NULL; DWORD n;
+  fresh_base(s, g_repo, g_branch, "app/", base, sizeof base);
+  snprintf(url, sizeof url, "%slauncher.json", base);
+  if (!http_get(s, url, 10000, &j, &n, NULL)) goto out;
+  build = json_num(j, "build", 0);
+  char hash[48] = "", eng[40] = "", engUrl[600] = "";
+  json_str(j, "hash", hash, sizeof hash); json_str(j, "engine", eng, sizeof eng); json_str(j, "engineUrl", engUrl, sizeof engUrl);
+  if (build <= APP_BUILD || strlen(hash) != 40) { state = "current"; goto out; }
+  dlog("launcher: build %lld is out (this is %d)", build, APP_BUILD);
+  app_status("downloading", build);
+  if (eng[0] && strcmp(eng, ENGINE_VER) && !engine_ready(eng) && !fetch_engine(s, eng, engUrl)) goto out;
+  char *exe = NULL; DWORD len = 0, h[1]; (void)h; char got[41];
+  snprintf(url, sizeof url, "%sRuffDogsLauncher.exe", base);
+  if (!http_get(s, url, 60000, &exe, &len, NULL)) { dlog("launcher: new .exe didn't download"); goto out; }
+  git_hash(exe, len, got);
+  if (strcmp(got, hash)) { dlog("launcher: new .exe failed its check"); free(exe); goto out; }
+  WCHAR nw[BIG]; _snwprintf(nw, BIG, L"%ls.new", g_self);
+  int ok = write_file(nw, exe, len); free(exe);
+  if (ok && MoveFileExW(g_self, old, MOVEFILE_REPLACE_EXISTING) && MoveFileExW(nw, g_self, 0)) {
+    dlog("launcher: updated to build %lld", build);
+    state = "updated";
+  } else { MoveFileExW(old, g_self, MOVEFILE_REPLACE_EXISTING); DeleteFileW(nw); dlog("launcher: couldn't swap in the new .exe"); }
+out:
+  free(j); if (s) WinHttpCloseHandle(s);
+  app_status(state, build);
+  InterlockedExchange(&g_appChecking, 0);
+  return 0;
+}
+
 // ================================================================================================ the game library
 // installs.txt lists where each game lives ("id<TAB>folder" per line); each folder holds ruffdogs-game.json
 typedef struct { char id[64]; WCHAR dir[BIG]; } Inst;
@@ -479,7 +580,7 @@ static void installed_json(Buf *b, const Inst *in) {
   char *j = read_file(rec, NULL), commit[64] = "", when[40] = "";
   json_str(j, "commit", commit, sizeof commit); json_str(j, "installedAt", when, sizeof when);
   char eng[32] = ""; json_str(j, "engine", eng, sizeof eng);
-  if (strcmp(eng, ENGINE_VER)) commit[0] = 0;           // its .exe is from an older launcher: show it as needing an update, which rebuilds the .exe
+  if (strcmp(eng, ENGINE_VER) || json_num(j, "app", 0) != APP_BUILD) commit[0] = 0;   // its .exe is from another launcher build: show it as needing an update, which rebuilds the .exe
   b_add(b, "{\"commit\":"); b_str(b, commit); b_add(b, ",\"dir\":"); b_wstr(b, in->dir);
   b_add(b, ",\"size\":%lld,\"installedAt\":", json_num(j, "size", 0)); b_str(b, when); b_add(b, "}");
   free(j);
@@ -511,7 +612,7 @@ static void library_json(Buf *b) {
 static HANDLE g_proc; static char g_runId[64]; static ULONGLONG g_runStart;
 static void send_state(void) {
   Buf b = { 0 };
-  b_add(&b, "{\"t\":\"state\",\"app\":{\"version\":\"" APP_VERSION "\",\"platform\":\"windows\"},\"installed\":{");
+  b_add(&b, "{\"t\":\"state\",\"app\":{\"version\":\"" APP_VERSION "\",\"build\":%d,\"platform\":\"windows\"},\"installed\":{", APP_BUILD);
   EnterCriticalSection(&g_instLock);
   for (int i = 0; i < g_instN; i++) { if (i) b_add(&b, ","); b_str(&b, g_inst[i].id); b_add(&b, ":"); installed_json(&b, &g_inst[i]); }
   LeaveCriticalSection(&g_instLock);
@@ -725,7 +826,7 @@ static DWORD WINAPI install_thread(void *arg) {
   SYSTEMTIME st; GetSystemTime(&st);
   Buf r = { 0 };
   b_add(&r, "{\"id\":"); b_str(&r, job->id); b_add(&r, ",\"title\":"); b_str(&r, job->title);
-  b_add(&r, ",\"engine\":\"" ENGINE_VER "\",\"exe\":"); b_wstr(&r, name); b_add(&r, ",\"commit\":"); b_str(&r, m.commit[0] ? m.commit : job->commit);
+  b_add(&r, ",\"engine\":\"" ENGINE_VER "\",\"app\":%d,\"exe\":", APP_BUILD); b_wstr(&r, name); b_add(&r, ",\"commit\":"); b_str(&r, m.commit[0] ? m.commit : job->commit);
   b_add(&r, ",\"size\":%lld,\"installedAt\":\"%04d-%02d-%02dT%02d:%02d:%02dZ\"}", m.total, st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
   WCHAR gj[BIG]; _snwprintf(gj, BIG, L"%ls\\ruffdogs-game.json", dest);
   write_file(gj, r.s, (DWORD)r.n); free(r.s);
@@ -854,6 +955,14 @@ static void on_page_message(const char *m) {
     // the games read this to sign you in (OVERDRIVE online uses the same account)
     WCHAR p[BIG]; _snwprintf(p, BIG, L"%ls\\account.json", g_data);
     write_file(p, m, (DWORD)strlen(m));
+  }
+  else if (!strcmp(t, "appcheck")) CloseHandle(CreateThread(NULL, 0, app_update_thread, NULL, 0, NULL));
+  else if (!strcmp(t, "restart")) {                     // start the (new) launcher and close this one
+    if (g_proc) { post_simple("{\"t\":\"error\",\"message\":\"Close your game first, then restart the launcher.\"}"); return; }
+    WCHAR dir[BIG], line[BIG + 32]; wcscpy(dir, g_self); PathRemoveFileSpecW(dir);
+    _snwprintf(line, BIG + 32, L"\"%ls\" --restarted", g_self);
+    STARTUPINFOW si = { sizeof si }; PROCESS_INFORMATION pi;
+    if (CreateProcessW(g_self, line, NULL, NULL, FALSE, 0, NULL, dir, &si, &pi)) { CloseHandle(pi.hThread); CloseHandle(pi.hProcess); PostMessageW(g_win, WM_CLOSE, 0, 0); }
   }
   else if (!strcmp(t, "open")) {
     char url[1000]; json_str(m, "url", url, sizeof url);
@@ -1052,7 +1161,10 @@ int WINAPI wWinMain(HINSTANCE inst, HINSTANCE prev, PWSTR cmd, int show) {
     LocalFree(argv);
     if (self_install(GetCommandLineW())) return 0;
     // only one launcher: a second start (like a desktop shortcut) hands its game to the first one and quits
-    CreateMutexW(NULL, TRUE, L"RuffDogsLauncher.Single");
+    HANDLE one = CreateMutexW(NULL, TRUE, L"RuffDogsLauncher.Single");
+    if (GetLastError() == ERROR_ALREADY_EXISTS && wcsstr(GetCommandLineW(), L"--restarted")) {   // RESTART: the old one is still closing
+      for (int i = 0; i < 60 && GetLastError() == ERROR_ALREADY_EXISTS; i++) { CloseHandle(one); Sleep(150); one = CreateMutexW(NULL, TRUE, L"RuffDogsLauncher.Single"); }
+    }
     if (GetLastError() == ERROR_ALREADY_EXISTS) {
       HWND other = FindWindowW(L"RuffDogsLauncher", NULL);
       if (other) { COPYDATASTRUCT cd = { 0x52440001, (DWORD)strlen(g_autoplay), g_autoplay }; SendMessageW(other, WM_COPYDATA, 0, (LPARAM)&cd); }
@@ -1084,7 +1196,7 @@ int WINAPI wWinMain(HINSTANCE inst, HINSTANCE prev, PWSTR cmd, int show) {
   BOOL dark = TRUE; DwmSetWindowAttribute(g_win, 20 /* DWMWA_USE_IMMERSIVE_DARK_MODE */, &dark, sizeof dark);
   ShowWindow(g_win, show); UpdateWindow(g_win);
 
-  if (!g_gameMode) CloseHandle(CreateThread(NULL, 0, ui_update_thread, NULL, 0, NULL));
+  if (!g_gameMode) { CloseHandle(CreateThread(NULL, 0, ui_update_thread, NULL, 0, NULL)); CloseHandle(CreateThread(NULL, 0, app_update_thread, NULL, 0, NULL)); }
   PostMessageW(g_win, WM_STARTWEB, 0, 0);
 
   p_cef_run_message_loop();                            // the engine runs the Windows message loop too

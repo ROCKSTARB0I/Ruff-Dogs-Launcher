@@ -1,6 +1,6 @@
 {
- "version": 1793670448,
- "generated": "2026-11-03T01:47:28Z",
+ "version": 1793671377,
+ "generated": "2026-11-03T02:02:57Z",
  "games": [
   {
    "id": "overdrive",
@@ -17,9 +17,16 @@
    ],
    "rating": "Everyone 10+",
    "color": "#ff3b1f",
-   "commit": "b5fce0c852cde373c8dff98b498d1030c0650c7b",
-   "updated": "2026-11-03T01:47:02Z",
+   "commit": "bba2a4cade993d4869da953070fef4b1ec145d39",
+   "updated": "2026-11-03T02:02:31Z",
    "notes": [
+    {
+     "date": "2026-11-03",
+     "title": "The REDLINE intro is back",
+     "items": [
+      "The Ruff Dogs REDLINE intro plays again when you start OVERDRIVE from the launcher."
+     ]
+    },
     {
      "date": "2026-11-03",
      "title": "Radio and start menu in the launcher",
@@ -62,18 +69,10 @@
       "Press F3 to see your frame rate.",
       "The game finds the online server by itself."
      ]
-    },
-    {
-     "date": "2026-10-31",
-     "title": "Smoother roads",
-     "items": [
-      "Fixed black puddles that looked like holes in the road.",
-      "Fixed black spots where the ground poked through the road."
-     ]
     }
    ],
-   "news": "Radio and start menu in the launcher",
-   "size": 6634455,
+   "news": "The REDLINE intro is back",
+   "size": 6634789,
    "files": 86,
    "web": "https://rockstarb0i.github.io/OverDrive/",
    "art": {
@@ -102,8 +101,8 @@
    ],
    "rating": "Everyone 10+",
    "color": "#7cff6b",
-   "commit": "899e08e64ffd34430cce0926b779023b8de32205",
-   "updated": "2026-11-03T00:45:25Z",
+   "commit": "04d1a58ec1f3e6d4db7b49e234a14423df7019f2",
+   "updated": "2026-11-03T01:55:44Z",
    "notes": [
     {
      "date": "2026-11-03",
@@ -131,8 +130,8 @@
     }
    ],
    "news": "Online works from the launcher",
-   "size": 2280228,
-   "files": 66,
+   "size": 2311679,
+   "files": 67,
    "web": "https://rockstarb0i.github.io/Ghost-Hunters-TV/",
    "art": {
     "cover": "art/ghost-hunters-tv/cover.jpg",

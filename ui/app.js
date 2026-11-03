@@ -138,6 +138,13 @@ function onNative(m) {
     window.open(m.url, '_blank');
   } else if (m.t === 'ui-updated') {
     toast(null, 'Launcher updated', 'The new version loads next time you open the launcher.');
+  } else if (m.t === 'app-status') {
+    const was = S.appStatus && S.appStatus.state;
+    S.appStatus = m;
+    if (m.state === 'updated' && was !== 'updated') toast(null, 'Launcher updated', 'Restart the launcher to use the new version.');
+    if (S.appCheckAsked && m.state === 'current') { toast(null, 'You\'re up to date', 'This is the newest Ruff Dogs Launcher.'); S.appCheckAsked = false; }
+    if (S.appCheckAsked && m.state === 'failed') { toast(null, 'Couldn\'t check for updates', 'Check your internet connection and try again.'); S.appCheckAsked = false; }
+    renderAppBar(); if (S.route.page === 'settings') render();
   } else if (m.t === 'error') {
     toast(null, 'Something went wrong', m.message || '');
   }
@@ -398,6 +405,8 @@ function wire(root) {
     else if (act === 'manage') openManage(S.byId[id]);
     else if (act === 'feature') showFeature(+b.dataset.i);
     else if (act === 'allnotes') { S.allNotes = id; render(); }
+    else if (act === 'appcheck') { S.appCheckAsked = true; Native.send({ t: 'appcheck' }); }
+    else if (act === 'restart') Native.send({ t: 'restart' });
     else if (act === 'commgame') { S.comm.game = b.dataset.v || null; S.comm.pick = null; S.comm.shot = null; render(true); }
     else if (act === 'commshot') { S.comm.shot = b.dataset.v || null; render(); }
     else if (act === 'commup') { S.comm.pick.up = b.dataset.v === '1'; render(); }
@@ -718,10 +727,35 @@ function pageSettings() {
       <div class="set"><div class="l"><div><span class="server-dot ${S.server.status === 'up' ? 'up' : 'down'}"></span>Ruff Dogs servers</div><div class="d">${S.server.status === 'up' ? 'Online' : 'Asleep. Accounts and online play need the studio Mac to be on.'}</div></div></div>
     </div>
     <div class="set-group"><h3>About</h3>
-      <div class="set"><div class="l"><div>Ruff Dogs Launcher ${esc(a.version || '')}</div><div class="d">Store list from ${fmtAgo(S.catalogWhen).toLowerCase()} · ${S.games.length} games · No real money, ever.</div></div>
-        <button class="btn ghost small" data-act="recheck">CHECK FOR UPDATES</button></div>
+      <div class="set"><div class="l"><div>Ruff Dogs Launcher ${esc(a.version || '')}${a.build ? ` (build ${a.build})` : ''}</div><div class="d">${appStatusText()}</div></div>
+        ${S.appStatus && S.appStatus.state === 'updated' ? '<button class="btn play small" data-act="restart">RESTART NOW</button>' : `<button class="btn ghost small" data-act="appcheck" ${S.appStatus && /checking|downloading/.test(S.appStatus.state) ? 'disabled' : ''}>CHECK FOR UPDATES</button>`}</div>
+      <div class="set"><div class="l"><div>Store list</div><div class="d">From ${fmtAgo(S.catalogWhen).toLowerCase()} · ${S.games.length} games · No real money, ever.</div></div>
+        <button class="btn ghost small" data-act="recheck">REFRESH STORE</button></div>
     </div>
   </div>`;
+}
+
+// ------------------------------------------------------------------------------------------------ launcher updates
+// The program checks for a new launcher every time it starts (and when you press CHECK FOR UPDATES). A new one is
+// downloaded and put in place straight away; it runs from the next start, or right now with RESTART.
+function appStatusText() {
+  const st = S.appStatus || {};
+  if (Native.kind !== 'windows') return 'Updates come from the Windows program.';
+  return st.state === 'checking' ? 'Checking for a new version…'
+    : st.state === 'downloading' ? `Downloading build ${st.build}…`
+    : st.state === 'updated' ? `Build ${st.build} is ready. Restart the launcher to use it.`
+    : st.state === 'failed' ? 'Couldn\'t check for updates. It tries again next time you open the launcher.'
+    : st.state === 'current' ? 'Up to date. It checks for a new version every time it starts.'
+    : 'It checks for a new version every time it starts.';
+}
+function renderAppBar() {
+  let bar = $('#appbar');
+  const show = S.appStatus && S.appStatus.state === 'updated';
+  if (!show) { if (bar) bar.remove(); return; }
+  if (!bar) { bar = document.createElement('div'); bar.id = 'appbar'; document.body.append(bar); }
+  bar.innerHTML = `<b>The launcher updated.</b><span>Restart it to use the new version.</span><button class="btn play small" data-act="restart">RESTART</button><button class="x" title="Later" aria-label="Later">&times;</button>`;
+  bar.querySelector('[data-act=restart]').onclick = () => Native.send({ t: 'restart' });
+  bar.querySelector('.x').onclick = () => bar.remove();
 }
 
 // ------------------------------------------------------------------------------------------------ modals + toasts
