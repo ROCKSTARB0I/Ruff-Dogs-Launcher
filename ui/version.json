@@ -1,9 +1,9 @@
 {
-"version":13,
+"version":14,
 "files":{
 "app.js":"d8b52fbc48f706b9a6f3778f93705e8863245b8a",
 "bridge.js":"a08eb117f9beaa881e376d7dec1368a31bcbee5e",
-"catalog.json":"03fb4f2302ddde57a08923c1576e9cb24f891a24",
+"catalog.json":"3835f716764b1ce580c5552e07f54f8da062df52",
 "config.json":"547a659321b648600a8e240894c964df326e1067",
 "index.html":"2ef08913256e2953ab4a185642f48ce1ae554e05",
 "style.css":"e9854c4ec49693a5c2856c38fdbf5702b1bdd406",
@@ -91,7 +91,7 @@
 "brand/logo-wide.png":"f2bbe937cb2f84b8b46aabc1fffc5c3947d643e2",
 "manifests/asylumvr.json":"81815ad862555359ac188d188f7dbd41b80abb88",
 "manifests/brutalist-vr.json":"1135506328d4d940558f2f1bff322ae428781bdd",
-"manifests/ghost-hunters-tv.json":"bc9933ca8c9c42b3753bbc71eba48c8d94ea45e7",
+"manifests/ghost-hunters-tv.json":"eff65333d899fc6127c09f548c76edc945ef111f",
 "manifests/gore-lab.json":"d1889a7d7ee3cd47145f1b32c790f56c15132503",
 "manifests/granny-vr.json":"05b47e3bb03a1316cb9098b0b0860919a3ca15ff",
 "manifests/halloweenvr.json":"1360e8609632b63b18e33e1b3265dca995e6b063",

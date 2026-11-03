@@ -1,6 +1,6 @@
 {
- "version": 1793671377,
- "generated": "2026-11-03T02:02:57Z",
+ "version": 1793672833,
+ "generated": "2026-11-03T02:27:13Z",
  "games": [
   {
    "id": "overdrive",
@@ -101,9 +101,18 @@
    ],
    "rating": "Everyone 10+",
    "color": "#7cff6b",
-   "commit": "04d1a58ec1f3e6d4db7b49e234a14423df7019f2",
-   "updated": "2026-11-03T01:55:44Z",
+   "commit": "55d06b187dcfe548fabb4a661059ae209e5e84a6",
+   "updated": "2026-11-03T02:26:48Z",
    "notes": [
+    {
+     "date": "2026-11-03",
+     "title": "Three maps and sturdier online",
+     "items": [
+      "Three separate maps to pick in the lobby: Boo's Diner, Camp Wannagohome and Harrow Mansion.",
+      "Online play finds the show server even right after it restarts, and tells you exactly what went wrong if it can't.",
+      "Invite links now open the web version, so friends without the launcher can join too."
+     ]
+    },
     {
      "date": "2026-11-03",
      "title": "Online works from the launcher",
@@ -129,8 +138,8 @@
      ]
     }
    ],
-   "news": "Online works from the launcher",
-   "size": 2311679,
+   "news": "Three maps and sturdier online",
+   "size": 2313520,
    "files": 67,
    "web": "https://rockstarb0i.github.io/Ghost-Hunters-TV/",
    "art": {

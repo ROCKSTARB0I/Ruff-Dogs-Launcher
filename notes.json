@@ -1,248 +1,283 @@
 {
-  "_note": "Update notes shown under What's new. Newest first. When a game gets an update, add an entry at the top: date (YYYY-MM-DD), a short title and plain-English items. Then run tools/sync.py and tools/publish.py. Days with no entry here fall back to the game's GitHub commit messages.",
-  "overdrive": [
-    {
-      "date": "2026-11-03",
-      "title": "The REDLINE intro is back",
-      "items": [
-        "The Ruff Dogs REDLINE intro plays again when you start OVERDRIVE from the launcher."
-      ]
-    },
-    {
-      "date": "2026-11-03",
-      "title": "Radio and start menu in the launcher",
-      "items": [
-        "The radio plays its songs when you play from the Ruff Dogs Launcher.",
-        "OVERDRIVE opens on its own start menu again, with the theme music."
-      ]
-    },
-    {
-      "date": "2026-11-03",
-      "title": "Online works from the launcher",
-      "items": [
-        "Online races now find the Ruff Dogs server when you play from the Ruff Dogs Launcher.",
-        "Launcher players show up as PC players."
-      ]
-    },
-    {
-      "date": "2026-11-02",
-      "title": "Look around while you race",
-      "items": [
-        "Move the mouse to look around your car while racing. The camera eases back behind you after a moment.",
-        "The mouse pointer hides during races. Press Esc to pause.",
-        "Smoother sound on slower PCs."
-      ]
-    },
-    {
-      "date": "2026-11-02",
-      "title": "Faster start and tunnel fix",
-      "items": [
-        "The intro no longer freezes on PC: the game gets its graphics ready before the video plays.",
-        "Fixed tunnel entrances that had a wall sticking into the road.",
-        "Less choppy sound on laptops."
-      ]
-    },
-    {
-      "date": "2026-11-01",
-      "title": "Graphics settings and online lookup",
-      "items": [
-        "New GRAPHICS setting (High, Medium, Low). It picks the right one for your PC by itself.",
-        "Press F3 to see your frame rate.",
-        "The game finds the online server by itself."
-      ]
-    },
-    {
-      "date": "2026-10-31",
-      "title": "Smoother roads",
-      "items": [
-        "Fixed black puddles that looked like holes in the road.",
-        "Fixed black spots where the ground poked through the road."
-      ]
-    }
-  ],
-  "ghost-hunters-tv": [
-    {
-      "date": "2026-11-03",
-      "title": "Online works from the launcher",
-      "items": [
-        "Hosting and joining shows now works when you play from the Ruff Dogs Launcher."
-      ]
-    },
-    {
-      "date": "2026-11-02",
-      "title": "Windows version and online fix",
-      "items": [
-        "Ghost Hunters TV now has its own Windows .exe with a start screen.",
-        "Online rooms connect more reliably."
-      ]
-    },
-    {
-      "date": "2026-11-01",
-      "title": "First release",
-      "items": [
-        "One friend films, the rest host, and one friend can be the ghost.",
-        "Four ghosts to catch on camera: Edith, Poltergeist Pete, Sir Clanksalot and Gloop.",
-        "Silly crew with big noses and wobbly heads."
-      ]
-    }
-  ],
-  "brutalist-vr": [
-    {
-      "date": "2026-11-02",
-      "title": "New weapons and grabbing enemies",
-      "items": [
-        "New weapons: the zweihander, scimitar, naginata, mace, pitchfork and an autocannon.",
-        "Enemies can grab your hand. Shake it free or punch your way out.",
-        "Rebuilt hands with real fingers.",
-        "Hub stalls now page with arrows."
-      ]
-    },
-    {
-      "date": "2026-11-01",
-      "title": "Hub, career and new maps",
-      "items": [
-        "A market hall hub with four weapon stalls, a tailor and a jobs board.",
-        "Weapon walls on every map, plus 13 jobs to earn cash.",
-        "New maps: alley, rooftops, yard, tenement, depot, metro, chapel and downtown.",
-        "Fixed VR walking going the wrong way after you turn."
-      ]
-    }
-  ],
-  "infiltrate": [
-    {
-      "date": "2026-10-16",
-      "title": "Missions and operators",
-      "items": [
-        "Three missions: BLACK SITE, HARBOR and THE VILLA.",
-        "Pick an operator: SPECTRE, TORCH or WRAITH.",
-        "Gadgets: drone, breach charges, flashbangs and a heartbeat sensor.",
-        "Security cameras and walls you can shoot through."
-      ]
-    }
-  ],
-  "halloweenvr": [
-    {
-      "date": "2026-11-03",
-      "title": "The night he came home",
-      "items": [
-        "Now a story in five chapters: Nichols Hardware, Haddonfield High, Judith's Grave, Halloween Night and The Final Girl. Finish one to unlock the next.",
-        "A much bigger Haddonfield: Main Street and its shops, the alley behind them, Haddonfield High, the cemetery, and Lampkin Lane joined up by the avenues.",
-        "Stealth chapters: if the sheriff, Loomis or Laurie gets a good look at you, you start that chapter over.",
-        "Cutscenes instead of captions: an opening shot for every chapter, the mask going on, and the ending told the way the film tells it.",
-        "Michael stays in the shadows in cutscenes, with only the pale mask catching the light.",
-        "Getting knocked down is now a real fall: you hit the floor, then sit up."
-      ]
-    },
-    {
-      "date": "2026-11-02",
-      "title": "The Shape update",
-      "items": [
-        "Evil Within: stalk people who haven't noticed you to grow stronger in three tiers. Tier III makes you fast and unstoppable for fifty seconds.",
-        "Stand still to hear frightened heartbeats through the walls.",
-        "Friends fight back: someone who sees you grab a friend will rush in and pull them free.",
-        "Dr. Loomis now actually hunts you with his revolver.",
-        "New look: glowing streetlights with light shafts, a damp street, film grain and bloom on PC, drifting dust, falling leaves and trees in the wind.",
-        "Haddonfield dressed for Halloween: carved jack-o'-lanterns, bushy hedges, telephone poles and wires, a scarecrow, hay bales, lawn tombstones, hydrants and the Lampkin Lane street sign."
-      ]
-    },
-    {
-      "date": "2026-10-17",
-      "title": "Haddonfield update",
-      "items": [
-        "Real jointed fingers, and both hands now match your controllers.",
-        "You start outside on the lawn across from the Myers house.",
-        "A simple arrow shows you where to go next."
-      ]
-    }
-  ],
-  "granny-vr": [
-    {
-      "date": "2026-10-14",
-      "title": "First release",
-      "items": [
-        "Escape Granny's house in VR or on PC."
-      ]
-    }
-  ],
-  "gore-lab": [
-    {
-      "date": "2026-10-31",
-      "title": "New sounds and better faces",
-      "items": [
-        "Realistic weapon, impact and punch sounds.",
-        "More realistic dummies with sculpted noses.",
-        "New explosions.",
-        "Fixed the choke grab on necks."
-      ]
-    }
-  ],
-  "jasons-revenge": [
-    {
-      "date": "2026-10-19",
-      "title": "Prettier skies",
-      "items": [
-        "A painted tree line on the horizon.",
-        "Clouds that fade in and out smoothly.",
-        "Flatter far hills."
-      ]
-    },
-    {
-      "date": "2026-10-17",
-      "title": "Play as a counselor",
-      "items": [
-        "New counselor mode: hide from Jason, find items and escape.",
-        "Six areas with lit, furnished cabins. Pick one on the title screen.",
-        "Smarter, scarier Jason.",
-        "A more realistic forest and moonlight."
-      ]
-    }
-  ],
-  "manhuntvr": [
-    {
-      "date": "2026-10-18",
-      "title": "Story scenes and Executions menu",
-      "items": [
-        "Fourteen story cutscenes with voice acting between levels.",
-        "New Executions menu: try every weapon on a demo stage.",
-        "New stone and concrete textures for Born Again.",
-        "Fixed the news anchor having no sound in VR."
-      ]
-    }
-  ],
-  "asylumvr": [
-    {
-      "date": "2026-10-30",
-      "title": "New title music",
-      "items": [
-        "New title themes and menu sounds.",
-        "Install it as an app on your Quest."
-      ]
-    },
-    {
-      "date": "2026-10-19",
-      "title": "Testing Site",
-      "items": [
-        "A new Testing Site area with its own logo and theme.",
-        "Tape 4: the chained door opens with the bolt cutters.",
-        "VR captions now fit on screen."
-      ]
-    }
-  ],
-  "postal2-vr": [
-    {
-      "date": "2026-10-16",
-      "title": "Voices and fixes",
-      "items": [
-        "Hundreds of new voice lines.",
-        "Fixed the game not loading online."
-      ]
-    },
-    {
-      "date": "2026-10-14",
-      "title": "First release",
-      "items": [
-        "Play on a flat screen or in VR."
-      ]
-    }
-  ]
+ "_note": "Update notes shown under What's new. Newest first. When a game gets an update, add an entry at the top: date (YYYY-MM-DD), a short title and plain-English items. Then run tools/sync.py and tools/publish.py. Days with no entry here fall back to the game's GitHub commit messages.",
+ "run-or-get-shot": [
+  {
+   "date": "2026-11-02",
+   "title": "New game: RUN OR GET SHOT",
+   "items": [
+    "Fifteen episodes, from a building with every door welded shut to a birthday nobody organised.",
+    "Point and click to explore. Hold SPACE to light up everything you can click in a room.",
+    "Switch between Johnny, Sarah, Timmy and Joe with 1-4 or TAB — each one gets a different answer out of the same object.",
+    "Comic set pieces where you click targets as the ring closes, and top-down shootouts with WASD, mouse aim and a dive roll on SPACE.",
+    "Every character, prop, background, sound effect and piece of music is generated at runtime. The game ships with no image or audio files at all."
+   ]
+  }
+ ],
+ "overdrive": [
+  {
+   "date": "2026-11-03",
+   "title": "The REDLINE intro is back",
+   "items": [
+    "The Ruff Dogs REDLINE intro plays again when you start OVERDRIVE from the launcher."
+   ]
+  },
+  {
+   "date": "2026-11-03",
+   "title": "Radio and start menu in the launcher",
+   "items": [
+    "The radio plays its songs when you play from the Ruff Dogs Launcher.",
+    "OVERDRIVE opens on its own start menu again, with the theme music."
+   ]
+  },
+  {
+   "date": "2026-11-03",
+   "title": "Online works from the launcher",
+   "items": [
+    "Online races now find the Ruff Dogs server when you play from the Ruff Dogs Launcher.",
+    "Launcher players show up as PC players."
+   ]
+  },
+  {
+   "date": "2026-11-02",
+   "title": "Look around while you race",
+   "items": [
+    "Move the mouse to look around your car while racing. The camera eases back behind you after a moment.",
+    "The mouse pointer hides during races. Press Esc to pause.",
+    "Smoother sound on slower PCs."
+   ]
+  },
+  {
+   "date": "2026-11-02",
+   "title": "Faster start and tunnel fix",
+   "items": [
+    "The intro no longer freezes on PC: the game gets its graphics ready before the video plays.",
+    "Fixed tunnel entrances that had a wall sticking into the road.",
+    "Less choppy sound on laptops."
+   ]
+  },
+  {
+   "date": "2026-11-01",
+   "title": "Graphics settings and online lookup",
+   "items": [
+    "New GRAPHICS setting (High, Medium, Low). It picks the right one for your PC by itself.",
+    "Press F3 to see your frame rate.",
+    "The game finds the online server by itself."
+   ]
+  },
+  {
+   "date": "2026-10-31",
+   "title": "Smoother roads",
+   "items": [
+    "Fixed black puddles that looked like holes in the road.",
+    "Fixed black spots where the ground poked through the road."
+   ]
+  }
+ ],
+ "ghost-hunters-tv": [
+  {
+   "date": "2026-11-03",
+   "title": "Three maps and sturdier online",
+   "items": [
+    "Three separate maps to pick in the lobby: Boo's Diner, Camp Wannagohome and Harrow Mansion.",
+    "Online play finds the show server even right after it restarts, and tells you exactly what went wrong if it can't.",
+    "Invite links now open the web version, so friends without the launcher can join too."
+   ]
+  },
+  {
+   "date": "2026-11-03",
+   "title": "Online works from the launcher",
+   "items": [
+    "Hosting and joining shows now works when you play from the Ruff Dogs Launcher."
+   ]
+  },
+  {
+   "date": "2026-11-02",
+   "title": "Windows version and online fix",
+   "items": [
+    "Ghost Hunters TV now has its own Windows .exe with a start screen.",
+    "Online rooms connect more reliably."
+   ]
+  },
+  {
+   "date": "2026-11-01",
+   "title": "First release",
+   "items": [
+    "One friend films, the rest host, and one friend can be the ghost.",
+    "Four ghosts to catch on camera: Edith, Poltergeist Pete, Sir Clanksalot and Gloop.",
+    "Silly crew with big noses and wobbly heads."
+   ]
+  }
+ ],
+ "brutalist-vr": [
+  {
+   "date": "2026-11-02",
+   "title": "New weapons and grabbing enemies",
+   "items": [
+    "New weapons: the zweihander, scimitar, naginata, mace, pitchfork and an autocannon.",
+    "Enemies can grab your hand. Shake it free or punch your way out.",
+    "Rebuilt hands with real fingers.",
+    "Hub stalls now page with arrows."
+   ]
+  },
+  {
+   "date": "2026-11-01",
+   "title": "Hub, career and new maps",
+   "items": [
+    "A market hall hub with four weapon stalls, a tailor and a jobs board.",
+    "Weapon walls on every map, plus 13 jobs to earn cash.",
+    "New maps: alley, rooftops, yard, tenement, depot, metro, chapel and downtown.",
+    "Fixed VR walking going the wrong way after you turn."
+   ]
+  }
+ ],
+ "infiltrate": [
+  {
+   "date": "2026-10-16",
+   "title": "Missions and operators",
+   "items": [
+    "Three missions: BLACK SITE, HARBOR and THE VILLA.",
+    "Pick an operator: SPECTRE, TORCH or WRAITH.",
+    "Gadgets: drone, breach charges, flashbangs and a heartbeat sensor.",
+    "Security cameras and walls you can shoot through."
+   ]
+  }
+ ],
+ "halloweenvr": [
+  {
+   "date": "2026-11-03",
+   "title": "The night he came home",
+   "items": [
+    "Now a story in five chapters: Nichols Hardware, Haddonfield High, Judith's Grave, Halloween Night and The Final Girl. Finish one to unlock the next.",
+    "A much bigger Haddonfield: Main Street and its shops, the alley behind them, Haddonfield High, the cemetery, and Lampkin Lane joined up by the avenues.",
+    "Stealth chapters: if the sheriff, Loomis or Laurie gets a good look at you, you start that chapter over.",
+    "Cutscenes instead of captions: an opening shot for every chapter, the mask going on, and the ending told the way the film tells it.",
+    "Michael stays in the shadows in cutscenes, with only the pale mask catching the light.",
+    "Getting knocked down is now a real fall: you hit the floor, then sit up."
+   ]
+  },
+  {
+   "date": "2026-11-02",
+   "title": "The Shape update",
+   "items": [
+    "Evil Within: stalk people who haven't noticed you to grow stronger in three tiers. Tier III makes you fast and unstoppable for fifty seconds.",
+    "Stand still to hear frightened heartbeats through the walls.",
+    "Friends fight back: someone who sees you grab a friend will rush in and pull them free.",
+    "Dr. Loomis now actually hunts you with his revolver.",
+    "New look: glowing streetlights with light shafts, a damp street, film grain and bloom on PC, drifting dust, falling leaves and trees in the wind.",
+    "Haddonfield dressed for Halloween: carved jack-o'-lanterns, bushy hedges, telephone poles and wires, a scarecrow, hay bales, lawn tombstones, hydrants and the Lampkin Lane street sign."
+   ]
+  },
+  {
+   "date": "2026-10-17",
+   "title": "Haddonfield update",
+   "items": [
+    "Real jointed fingers, and both hands now match your controllers.",
+    "You start outside on the lawn across from the Myers house.",
+    "A simple arrow shows you where to go next."
+   ]
+  }
+ ],
+ "granny-vr": [
+  {
+   "date": "2026-10-14",
+   "title": "First release",
+   "items": [
+    "Escape Granny's house in VR or on PC."
+   ]
+  }
+ ],
+ "gore-lab": [
+  {
+   "date": "2026-10-31",
+   "title": "New sounds and better faces",
+   "items": [
+    "Realistic weapon, impact and punch sounds.",
+    "More realistic dummies with sculpted noses.",
+    "New explosions.",
+    "Fixed the choke grab on necks."
+   ]
+  }
+ ],
+ "jasons-revenge": [
+  {
+   "date": "2026-10-19",
+   "title": "Prettier skies",
+   "items": [
+    "A painted tree line on the horizon.",
+    "Clouds that fade in and out smoothly.",
+    "Flatter far hills."
+   ]
+  },
+  {
+   "date": "2026-10-17",
+   "title": "Play as a counselor",
+   "items": [
+    "New counselor mode: hide from Jason, find items and escape.",
+    "Six areas with lit, furnished cabins. Pick one on the title screen.",
+    "Smarter, scarier Jason.",
+    "A more realistic forest and moonlight."
+   ]
+  }
+ ],
+ "manhuntvr": [
+  {
+   "date": "2026-10-18",
+   "title": "Story scenes and Executions menu",
+   "items": [
+    "Fourteen story cutscenes with voice acting between levels.",
+    "New Executions menu: try every weapon on a demo stage.",
+    "New stone and concrete textures for Born Again.",
+    "Fixed the news anchor having no sound in VR."
+   ]
+  }
+ ],
+ "asylumvr": [
+  {
+   "date": "2026-10-30",
+   "title": "New title music",
+   "items": [
+    "New title themes and menu sounds.",
+    "Install it as an app on your Quest."
+   ]
+  },
+  {
+   "date": "2026-10-19",
+   "title": "Testing Site",
+   "items": [
+    "A new Testing Site area with its own logo and theme.",
+    "Tape 4: the chained door opens with the bolt cutters.",
+    "VR captions now fit on screen."
+   ]
+  }
+ ],
+ "postal2-vr": [
+  {
+   "date": "2026-10-16",
+   "title": "Voices and fixes",
+   "items": [
+    "Hundreds of new voice lines.",
+    "Fixed the game not loading online."
+   ]
+  },
+  {
+   "date": "2026-10-14",
+   "title": "First release",
+   "items": [
+    "Play on a flat screen or in VR."
+   ]
+  }
+ ],
+ "the-bad-company": [
+  {
+   "date": "2026-11-02",
+   "title": "Out now",
+   "items": [
+    "Twenty-nine missions: a nineteen-mission campaign across four leads, plus a ten-mission bonus campaign you unlock by beating the last level.",
+    "Eight hundred real firearms, each one handling differently based on its actual cartridge and class.",
+    "Slow-motion dives, a weapon wheel, throwable guns, doors that swing open when you walk into them, and a first-person view on the slash key.",
+    "Every mission has its own music, written by the game as you play. There is a soundtrack player in the main menu.",
+    "What you choose changes the story: whether Ron sends the email, and whether Recker leaves the last man alive."
+   ]
+  }
+ ]
 }
