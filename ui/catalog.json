@@ -1,6 +1,6 @@
 {
- "version": 1793663383,
- "generated": "2026-11-02T23:49:43Z",
+ "version": 1793664542,
+ "generated": "2026-11-03T00:09:02Z",
  "games": [
   {
    "id": "overdrive",
@@ -117,6 +117,9 @@
     "hero": "art/ghost-hunters-tv/hero.jpg",
     "logo": "art/ghost-hunters-tv/logo.png",
     "icon": "art/ghost-hunters-tv/icon.jpg",
+    "shot1": "art/ghost-hunters-tv/shot1.jpg",
+    "shot2": "art/ghost-hunters-tv/shot2.jpg",
+    "shot3": "art/ghost-hunters-tv/shot3.jpg",
     "ico": "art/ghost-hunters-tv/game.ico"
    },
    "added": "2026-11-01"
@@ -160,6 +163,7 @@
     "header": "art/gore-lab/header.jpg",
     "hero": "art/gore-lab/hero.jpg",
     "icon": "art/gore-lab/icon.png",
+    "shot1": "art/gore-lab/shot1.jpg",
     "ico": "art/gore-lab/game.ico"
    },
    "added": "2026-11-01"
@@ -215,6 +219,8 @@
     "hero": "art/brutalist-vr/hero.jpg",
     "logo": "art/brutalist-vr/logo.png",
     "icon": "art/brutalist-vr/icon.jpg",
+    "shot1": "art/brutalist-vr/shot1.jpg",
+    "shot2": "art/brutalist-vr/shot2.jpg",
     "ico": "art/brutalist-vr/game.ico"
    },
    "added": "2026-11-01"
@@ -259,6 +265,7 @@
     "hero": "art/infiltrate/hero.jpg",
     "logo": "art/infiltrate/logo.png",
     "icon": "art/infiltrate/icon.png",
+    "shot1": "art/infiltrate/shot1.jpg",
     "ico": "art/infiltrate/game.ico"
    },
    "added": "2026-11-01"
@@ -311,6 +318,8 @@
     "hero": "art/jasons-revenge/hero.jpg",
     "logo": "art/jasons-revenge/logo.png",
     "icon": "art/jasons-revenge/icon.jpg",
+    "shot1": "art/jasons-revenge/shot1.jpg",
+    "shot2": "art/jasons-revenge/shot2.jpg",
     "ico": "art/jasons-revenge/game.ico"
    },
    "added": "2026-11-01"
@@ -365,6 +374,7 @@
     "hero": "art/halloweenvr/hero.jpg",
     "logo": "art/halloweenvr/logo.png",
     "icon": "art/halloweenvr/icon.jpg",
+    "shot1": "art/halloweenvr/shot1.jpg",
     "ico": "art/halloweenvr/game.ico"
    },
    "added": "2026-11-01"
@@ -409,6 +419,7 @@
     "hero": "art/manhuntvr/hero.jpg",
     "logo": "art/manhuntvr/logo.png",
     "icon": "art/manhuntvr/icon.png",
+    "shot1": "art/manhuntvr/shot1.jpg",
     "ico": "art/manhuntvr/game.ico"
    },
    "added": "2026-11-01"
@@ -459,6 +470,7 @@
     "hero": "art/asylumvr/hero.jpg",
     "logo": "art/asylumvr/logo.png",
     "icon": "art/asylumvr/icon.png",
+    "shot1": "art/asylumvr/shot1.jpg",
     "ico": "art/asylumvr/game.ico"
    },
    "added": "2026-11-01"
@@ -509,6 +521,7 @@
     "hero": "art/postal2-vr/hero.jpg",
     "logo": "art/postal2-vr/logo.png",
     "icon": "art/postal2-vr/icon.jpg",
+    "shot1": "art/postal2-vr/shot1.jpg",
     "ico": "art/postal2-vr/game.ico"
    },
    "added": "2026-11-01"
@@ -549,6 +562,7 @@
     "hero": "art/granny-vr/hero.jpg",
     "logo": "art/granny-vr/logo.png",
     "icon": "art/granny-vr/icon.jpg",
+    "shot1": "art/granny-vr/shot1.jpg",
     "ico": "art/granny-vr/game.ico"
    },
    "added": "2026-11-01"

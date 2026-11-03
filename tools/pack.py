@@ -36,9 +36,9 @@ def build_setup(launcher, dist):
     with open(out, 'wb') as f:
         f.write(open(bare, 'rb').read()); off = f.tell(); f.write(data)
         f.write(b'RDSETUP1' + struct.pack('<QQ', off, len(data)))
-    z = os.path.join(dist, 'RuffDogsSetup.zip')
-    with zipfile.ZipFile(z, 'w', zipfile.ZIP_DEFLATED) as zf: zf.write(out, 'RuffDogsSetup.exe')
-    return out, z
+    old = os.path.join(dist, 'RuffDogsSetup.zip')            # setups go out as a plain .exe, never zipped
+    if os.path.isfile(old): os.remove(old)
+    return out
 
 def main():
     man = uimanifest.update()
@@ -63,9 +63,9 @@ def main():
         f.write(b'RDPAK001' + struct.pack('<Q', idx))
     z = os.path.join(dist, 'RuffDogsLauncher.zip')
     with zipfile.ZipFile(z, 'w', zipfile.ZIP_DEFLATED) as zf: zf.write(exe, 'RuffDogsLauncher.exe')
-    setup, sz = build_setup(exe, dist)
+    setup = build_setup(exe, dist)
     mb = lambda n: f'{n / 1048576:.1f} MB'
-    print(f'built {setup} ({mb(os.path.getsize(setup))}), {sz} ({mb(os.path.getsize(sz))})  <- give people this one')
+    print(f'built {setup} ({mb(os.path.getsize(setup))})  <- give people this one')
     print(f'page version {man["version"]}: program {size // 1024} KB + {len(files)} packed files')
     print(f'built {exe} ({mb(os.path.getsize(exe))}), {z} ({mb(os.path.getsize(z))})')
 

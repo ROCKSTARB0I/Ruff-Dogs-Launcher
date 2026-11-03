@@ -129,7 +129,7 @@ function onNative(m) {
     const p = playData(), rec = p[m.id] || { secs: 0 };
     rec.secs += Math.max(0, m.seconds || Math.round((Date.now() - (S.runStart || Date.now())) / 1000));
     rec.last = new Date().toISOString(); p[m.id] = rec; store.set('rd_play_' + user(), p);
-    S.native.running = null; render();
+    S.native.running = null; render(); reportPlaytime();
   } else if (m.t === 'folder') {
     S.native.library = m.library || S.native.library; render(); if ($('#modal').dataset.kind === 'install') openInstall(S.byId[$('#modal').dataset.id]);
   } else if (m.t === 'opened' && m.url) {
@@ -314,8 +314,9 @@ const avatarUrl = () => {
 
 // ------------------------------------------------------------------------------------------------ routing + rendering
 function go(page, id = null) {
-  if (!['store', 'game', 'library', 'downloads', 'profile', 'settings'].includes(page)) page = 'store';
+  if (!['store', 'game', 'library', 'community', 'downloads', 'profile', 'settings'].includes(page)) page = 'store';
   S.route = { page, id };
+  const gr = $('#gresults'), gs = $('#gsearch'); if (gr) gr.hidden = true; if (gs) { gs.value = ''; gs.blur(); }
   history.replaceState(null, '', '#' + page + (id ? '/' + id : ''));
   render(true);
 }
@@ -329,7 +330,8 @@ function render(scrollTop) {
   document.querySelectorAll('#top nav a').forEach((a) => a.classList.toggle('on', a.dataset.go === S.route.page || (a.dataset.go === 'store' && S.route.page === 'game')));
   renderChip(); renderProgress();
   const v = $('#view'), keep = v.querySelector('.lib-list') ? v.querySelector('.lib-list').scrollTop : 0;
-  const pages = { store: pageStore, game: pageGame, library: pageLibrary, downloads: pageDownloads, profile: pageProfile, settings: pageSettings };
+  if (S.route.page === 'community' && !S.comm.loaded && !S.comm.loading) loadCommunity();
+  const pages = { store: pageStore, game: pageGame, library: pageLibrary, community: pageCommunity, downloads: pageDownloads, profile: pageProfile, settings: pageSettings };
   v.innerHTML = pages[S.route.page]();
   if (scrollTop) v.scrollTop = 0;
   if (v.querySelector('.lib-list')) v.querySelector('.lib-list').scrollTop = keep;
@@ -386,6 +388,15 @@ function wire(root) {
     else if (act === 'manage') openManage(S.byId[id]);
     else if (act === 'feature') showFeature(+b.dataset.i);
     else if (act === 'allnotes') { S.allNotes = id; render(); }
+    else if (act === 'commgame') { S.comm.game = b.dataset.v || null; S.comm.pick = null; S.comm.shot = null; render(true); }
+    else if (act === 'commshot') { S.comm.shot = b.dataset.v || null; render(); }
+    else if (act === 'commup') { S.comm.pick.up = b.dataset.v === '1'; render(); }
+    else if (act === 'committag') { const t = b.dataset.v, p = S.comm.pick; p.tags = p.tags.includes(t) ? p.tags.filter((x) => x !== t) : p.tags.length < 3 ? [...p.tags, t] : p.tags; render(); }
+    else if (act === 'commsave') {
+      const p = S.comm.pick;
+      api('/api/community/rate', { game: p.id, up: p.up, tags: p.tags }).then((j) => { S.comm.data = j; S.comm.pick = null; toast(S.byId[p.id], 'Thanks for rating!', 'Your rating helps other players pick a game.'); render(); })
+        .catch((e) => toast(null, 'Couldn\'t save your rating', e.message));
+    }
     else if (act === 'filter') { S.storeFilter = b.dataset.v; render(); }
     else if (act === 'libfilter') { S.libFilter = b.dataset.v; render(); }
     else if (act === 'folder') Native.send({ t: 'folder' });
@@ -414,18 +425,24 @@ function pageStore() {
   const list = S.games.filter((g) => (S.storeFilter === 'All' || (g.modes || []).includes(S.storeFilter) || (g.genres || []).includes(S.storeFilter)) && (!q || (g.title + ' ' + g.tagline + ' ' + (g.genres || []).join(' ')).toLowerCase().includes(q)));
   const own = owned();
   return `<div class="page">
-    <div class="feature" data-game="${feat[S.featureI].id}">
-      ${feat.map((g, i) => `<div class="slide" data-slide="${i}" style="position:absolute;inset:0;opacity:${i === S.featureI ? 1 : 0};pointer-events:${i === S.featureI ? 'auto' : 'none'}">
-        ${art(g, 'wide')}<div class="scrim"></div>
-        <div class="info"><div class="kicker">${i === 0 ? 'Just updated' : 'Featured'} · ${esc((g.genres || []).join(' · '))}</div>
+    <div class="feature">
+      ${feat.map((g, i) => { const shots = ['shot1', 'shot2', 'shot3', 'header'].map((k) => (g.art || {})[k]).filter(Boolean).slice(0, 4); return `<div class="slide" data-slide="${i}" style="opacity:${i === S.featureI ? 1 : 0};pointer-events:${i === S.featureI ? 'auto' : 'none'}">
+        <div class="f-main" data-game="${g.id}">${art(g, 'wide')}</div>
+        <div class="f-side" data-game="${g.id}">
           ${g.art && g.art.logo ? `<img class="logo" src="${artUrl(g.art.logo)}" alt="${esc(g.title)}">` : `<h2>${esc(g.title)}</h2>`}
-          <p>${esc(g.tagline)}</p>${actionButton(g, true)}</div></div>`).join('')}
-      <div class="dots">${feat.map((g, i) => `<i class="${i === S.featureI ? 'on' : ''}" data-act="feature" data-i="${i}"></i>`).join('')}</div>
+          <p>${esc(g.tagline)}</p>
+          ${shots.length ? `<div class="f-shots">${shots.map((u) => `<img src="${artUrl(u)}" alt="">`).join('')}</div>` : ''}
+          <div class="f-tags">${(g.genres || []).slice(0, 4).map((t) => `<span>${esc(t)}</span>`).join('')}${(g.modes || []).includes('VR') ? '<span>VR</span>' : ''}</div>
+          <div class="f-buy"><span class="f-when">${i === 0 ? 'Updated ' + fmtAgo(g.updated).toLowerCase() : 'Free to play'}</span>${actionButton(g)}</div>
+        </div></div>`; }).join('')}
+      <button class="f-arrow l" data-act="feature" data-i="${(S.featureI + S.featureN - 1) % S.featureN}" aria-label="Previous">&#8249;</button>
+      <button class="f-arrow r" data-act="feature" data-i="${(S.featureI + 1) % S.featureN}" aria-label="Next">&#8250;</button>
     </div>
+    <div class="dots">${feat.map((g, i) => `<i class="${i === S.featureI ? 'on' : ''}" data-act="feature" data-i="${i}"></i>`).join('')}</div>
     <div class="section-title"><span>Recently updated</span></div>
     <div class="rows">${[...S.games].sort((a, b) => new Date(b.updated) - new Date(a.updated)).slice(0, 6).map((g) => `
       <div class="row-card" data-game="${g.id}">${art(g, 'header')}<div><div class="t">${esc(g.title)}</div><div class="d">${fmtAgo(g.updated)} · ${esc(g.news)}</div></div></div>`).join('')}</div>
-    <div class="section-title"><span>All games · ${S.games.length}</span><span style="font-size:12px;letter-spacing:.1em">Every game is free</span></div>
+    <div class="section-title"><span>All games · ${S.games.length}</span><span class="aside">Every game is free</span></div>
     <div class="filters" style="margin-bottom:16px">${genres.map((x) => `<span class="chip ${S.storeFilter === x ? 'on' : ''}" data-act="filter" data-v="${esc(x)}">${esc(x)}</span>`).join('')}
       <input class="search" id="store-search" placeholder="Search the store" value="${esc(S.storeSearch)}"></div>
     <div class="grid">${list.map((g) => `
@@ -436,8 +453,9 @@ function pageStore() {
 function showFeature(i) {
   S.featureI = i;
   document.querySelectorAll('[data-slide]').forEach((s) => { s.style.opacity = +s.dataset.slide === i ? 1 : 0; s.style.pointerEvents = +s.dataset.slide === i ? 'auto' : 'none'; });
-  document.querySelectorAll('.feature .dots i').forEach((d, k) => d.classList.toggle('on', k === i));
-  const f = $('.feature'); if (f) f.dataset.game = [...S.games].sort((a, b) => new Date(b.updated) - new Date(a.updated))[i].id;
+  document.querySelectorAll('.dots i').forEach((d, k) => d.classList.toggle('on', k === i));
+  const n = S.featureN, l = $('.f-arrow.l'), r = $('.f-arrow.r');
+  if (l) l.dataset.i = (i + n - 1) % n; if (r) r.dataset.i = (i + 1) % n;
 }
 
 function detailsBox(g) {
@@ -523,6 +541,99 @@ function pageLibrary() {
       <div class="section-title"><span>About</span></div><p style="color:#cfcbc3;line-height:1.65">${esc(g.about)}</p>${vrBox(g)}
     </div>${detailsBox(g)}</div>
   </div></div>`;
+}
+
+// ------------------------------------------------------------------------------------------------ community
+// News from every game, player ratings with tags, most played and screenshots. On purpose there is no chat, no comments
+// and no messages: players can only pick thumbs and tags from a fixed list, so nobody can write anything to anyone.
+S.comm = { game: null, loaded: false, loading: false, data: null, error: '', pick: null, shot: null };
+async function loadCommunity() {
+  S.comm.loading = true;
+  try { S.comm.data = await api('/api/community'); S.comm.error = ''; }
+  catch (e) { S.comm.error = e.message; }
+  S.comm.loading = false; S.comm.loaded = true;
+  reportPlaytime();
+  if (S.route.page === 'community') render();
+}
+// sends each game's total play time once it has grown (the server keeps the biggest number it has seen)
+async function reportPlaytime() {
+  if (!S.session || !S.session.token || !S.server.url) return;
+  const plays = playData(), sent = store.get('rd_playsent_' + user(), {});
+  for (const [id, p] of Object.entries(plays)) {
+    const secs = Math.round(p.secs || 0);
+    if (secs > 60 && secs > (sent[id] || 0)) {
+      try { await api('/api/community/playtime', { game: id, secs }); sent[id] = secs; } catch { return; }
+    }
+  }
+  store.set('rd_playsent_' + user(), sent);
+}
+function verdict(c) {
+  const n = (c.up || 0) + (c.down || 0);
+  if (!n) return { label: 'Not rated yet', cls: 'none', pct: 0, n };
+  const pct = Math.round(100 * c.up / n);
+  return { label: pct >= 80 ? 'Players love it' : pct >= 60 ? 'Mostly positive' : pct >= 40 ? 'Mixed' : 'Mostly negative', cls: pct >= 60 ? 'good' : pct >= 40 ? 'mixed' : 'bad', pct, n };
+}
+const commOf = (id) => (S.comm.data && S.comm.data.games[id]) || { up: 0, down: 0, tags: {}, players: 0, hours: 0 };
+const THUMB = (down) => `<svg viewBox="0 0 24 24" width="20" height="20" style="${down ? 'transform:scaleY(-1)' : ''}"><path fill="currentColor" d="M2 21h3V9H2v12Zm20-10.5c0-1.1-.9-2-2-2h-6.3l1-4.6.03-.32c0-.41-.17-.79-.44-1.06L13.2 1.5 6.6 8.1c-.37.36-.6.86-.6 1.4v9.5c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-1.5Z"/></svg>`;
+function newsCards(list, showGame) {
+  if (!list.length) return '<div class="comm-empty">No news yet.</div>';
+  return list.map(({ g, n }) => `<div class="news-card" data-game="${g.id}">
+    ${showGame ? art(g, 'header', 'thumb') : ''}
+    <div class="body"><div class="meta">${showGame ? `<b>${esc(g.title)}</b> · ` : ''}${fmtDate(n.date)}</div>
+      <div class="t">${esc(n.title === 'Update' ? 'Fixes and changes' : n.title)}</div>
+      ${n.items && n.items.length ? `<ul>${n.items.slice(0, showGame ? 3 : 8).map((t) => `<li>${esc(t)}</li>`).join('')}</ul>` : ''}</div></div>`).join('');
+}
+function ratingBar(c) {
+  const v = verdict(c);
+  return `<div class="rbar ${v.cls}"><i style="width:${v.n ? v.pct : 0}%"></i></div><div class="rlabel ${v.cls}">${v.label}${v.n ? ` · ${v.pct}% of ${v.n} ${v.n === 1 ? 'player' : 'players'}` : ''}</div>`;
+}
+function pageCommunity() {
+  const games = S.games, sel = S.comm.game && S.byId[S.comm.game];
+  const chips = `<div class="comm-chips"><span class="chip ${!sel ? 'on' : ''}" data-act="commgame" data-v="">All games</span>${games.map((g) => `<span class="chip ic ${sel && sel.id === g.id ? 'on' : ''}" data-act="commgame" data-v="${g.id}">${art(g, 'icon', 'mini')}${esc(g.title)}</span>`).join('')}</div>`;
+  const status = S.comm.loading && !S.comm.data ? '<div class="comm-note">Loading ratings…</div>'
+    : S.comm.error ? `<div class="comm-note">${esc(S.comm.error)} News and screenshots still work.</div>` : '';
+  const safety = '<div class="comm-safe">There\'s no chat or comments here, just ratings and tags, so the community stays friendly for everyone.</div>';
+  if (!sel) {
+    const news = games.flatMap((g) => (g.notes || []).map((n) => ({ g, n }))).sort((a, b) => String(b.n.date).localeCompare(String(a.n.date))).slice(0, 14);
+    const rated = [...games].sort((a, b) => { const va = verdict(commOf(a.id)), vb = verdict(commOf(b.id)); return (vb.n ? vb.pct + vb.n / 1000 : -1) - (va.n ? va.pct + va.n / 1000 : -1); });
+    const played = [...games].sort((a, b) => commOf(b.id).hours - commOf(a.id).hours || commOf(b.id).players - commOf(a.id).players);
+    return `<div class="comm"><h1 class="page-title">Community</h1><div class="comm-sub">News, ratings and screenshots from every Ruff Dogs game.</div>${chips}${status}
+      <div class="comm-grid"><div><div class="section-title" style="margin-top:0"><span>Latest news</span></div>${newsCards(news, true)}</div>
+      <div><div class="section-title" style="margin-top:0"><span>Player ratings</span></div>
+        <div class="comm-box">${rated.map((g) => `<div class="rrow" data-act="commgame" data-v="${g.id}">${art(g, 'icon', 'ic')}<div class="rr"><div class="nm">${esc(g.title)}</div>${ratingBar(commOf(g.id))}</div></div>`).join('')}</div>
+        <div class="section-title"><span>Most played</span></div>
+        <div class="comm-box">${played.slice(0, 6).map((g, i) => { const c = commOf(g.id); return `<div class="prow" data-act="commgame" data-v="${g.id}"><span class="rank">${i + 1}</span>${art(g, 'icon', 'ic')}<div class="nm">${esc(g.title)}</div><div class="hrs">${c.hours ? c.hours.toLocaleString() + ' h' : '–'}<small>${c.players} ${c.players === 1 ? 'player' : 'players'}</small></div></div>`; }).join('')}</div>
+        ${safety}</div></div></div>`;
+  }
+  const g = sel, c = commOf(g.id), v = verdict(c), tags = (S.comm.data && S.comm.data.tags) || [];
+  const mine = (S.comm.data && S.comm.data.mine && S.comm.data.mine[g.id]) || { up: null, tags: [] };
+  const pick = S.comm.pick && S.comm.pick.id === g.id ? S.comm.pick : { id: g.id, up: mine.up, tags: [...(mine.tags || [])] };
+  S.comm.pick = pick;
+  const canRate = S.session && S.session.token && S.comm.data && (installed(g.id) || (playData()[g.id] || {}).secs > 0 || owned().has(g.id));
+  const topTags = Object.entries(c.tags || {}).sort((a, b) => b[1] - a[1]).slice(0, 6);
+  const shots = Object.keys(g.art || {}).filter((k) => /^shot\d$/.test(k)).sort().map((k) => g.art[k]).concat((g.art || {}).hero ? [g.art.hero] : []);
+  const yours = !S.session || !S.session.token ? '<div class="comm-note">Sign in to rate games.</div>'
+    : !S.comm.data ? '' : !canRate ? '<div class="comm-note">Add this game to your library to rate it.</div>'
+    : `<div class="yours"><div class="k">Your rating</div>
+        <div class="thumbs"><button class="thumb ${pick.up === true ? 'on up' : ''}" data-act="commup" data-v="1">${THUMB(false)} Thumbs up</button><button class="thumb ${pick.up === false ? 'on down' : ''}" data-act="commup" data-v="0">${THUMB(true)} Thumbs down</button></div>
+        <div class="k" style="margin-top:12px">Pick up to 3 tags</div>
+        <div class="tagpick">${tags.map((t) => `<span class="chip ${pick.tags.includes(t) ? 'on' : ''}" data-act="committag" data-v="${esc(t)}">${esc(t)}</span>`).join('')}</div>
+        <button class="btn play small" style="margin-top:14px" data-act="commsave" ${pick.up === null || pick.up === undefined ? 'disabled' : ''}>SAVE RATING</button></div>`;
+  return `<div class="comm"><h1 class="page-title">Community</h1>${chips}${status}
+    <div class="gp-hero comm-hero">${art(g, 'wide')}<div class="lib-title">${g.art && g.art.logo ? `<img class="logo" src="${artUrl(g.art.logo)}" alt="${esc(g.title)}">` : `<h1>${esc(g.title)}</h1>`}</div></div>
+    <div class="comm-grid"><div>
+      ${shots.length ? `<div class="section-title" style="margin-top:0"><span>Screenshots</span></div><div class="shots">${shots.map((u, i) => `<div class="shot" data-act="commshot" data-v="${esc(u)}"><img src="${artUrl(u)}" alt="Screenshot ${i + 1}"></div>`).join('')}</div>` : ''}
+      <div class="section-title"><span>News</span></div>${newsCards((g.notes || []).map((n) => ({ g, n })), false)}
+    </div><div>
+      <div class="section-title" style="margin-top:0"><span>Player ratings</span></div>
+      <div class="comm-box"><div class="big ${v.cls}">${v.n ? v.pct + '%' : '–'}</div>${ratingBar(c)}
+        <div class="ud"><span>${THUMB(false)} ${c.up || 0}</span><span>${THUMB(true)} ${c.down || 0}</span></div>
+        ${topTags.length ? `<div class="k">Players say it's</div><div class="tagpick">${topTags.map(([t, n]) => `<span class="chip static">${esc(t)} <b>${n}</b></span>`).join('')}</div>` : ''}
+        <div class="stats2"><div><b>${c.players}</b><span>${c.players === 1 ? 'player' : 'players'}</span></div><div><b>${c.hours.toLocaleString()}</b><span>hours played</span></div></div>
+        ${yours}</div>
+      <button class="btn ghost small" style="margin-top:14px;width:100%" data-go="game" data-id="${g.id}">STORE PAGE</button>
+      ${safety}</div></div>
+    ${S.comm.shot ? `<div class="lightbox" data-act="commshot" data-v=""><img src="${artUrl(S.comm.shot)}" alt=""></div>` : ''}</div>`;
 }
 
 // ------------------------------------------------------------------------------------------------ downloads
@@ -652,6 +763,50 @@ function toast(g, title, text) {
   setTimeout(() => { t.style.transition = 'opacity .4s'; t.style.opacity = 0; setTimeout(() => t.remove(), 450); }, 5000);
 }
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+
+// ------------------------------------------------------------------------------------------------ search (top bar)
+// Finds games by name first, then by genre, tagline and what changed in their updates. "/" or Ctrl+K jumps to it.
+function searchGames(q) {
+  q = q.trim().toLowerCase(); if (!q) return [];
+  const score = (g) => {
+    const t = g.title.toLowerCase();
+    if (t.startsWith(q)) return 100; if (t.includes(q)) return 80;
+    if ((g.genres || []).concat(g.modes || []).some((x) => x.toLowerCase().startsWith(q))) return 60;
+    if ((g.tagline + ' ' + g.about).toLowerCase().includes(q)) return 40;
+    if ((g.notes || []).some((n) => (n.title + ' ' + (n.items || []).join(' ')).toLowerCase().includes(q))) return 20;
+    return 0;
+  };
+  return S.games.map((g) => [score(g), g]).filter(([s]) => s).sort((a, b) => b[0] - a[0]).map(([, g]) => g);
+}
+(() => {
+  const box = $('#gsearch'), res = $('#gresults'); let sel = 0, hits = [];
+  const draw = () => {
+    hits = searchGames(box.value).slice(0, 7);
+    if (!box.value.trim()) { res.hidden = true; return; }
+    res.hidden = false;
+    res.innerHTML = hits.length ? hits.map((g, i) => `<div class="gr ${i === sel ? 'on' : ''}" data-i="${i}">${art(g, 'icon', 'ic')}<div class="tx"><b>${esc(g.title)}</b><span>${esc(g.tagline)}</span></div><em>${installed(g.id) ? 'Installed' : owned().has(g.id) ? 'In library' : 'Free'}</em></div>`).join('')
+      + `<div class="gr all" data-i="-1">See all results in the store</div>` : `<div class="gr none">No games match "${esc(box.value.trim())}"</div>`;
+    res.querySelectorAll('.gr[data-i]').forEach((r) => r.onmousedown = (e) => { e.preventDefault(); pick(+r.dataset.i); });
+  };
+  const pick = (i) => {
+    const g = hits[i];
+    if (g) go('game', g.id); else { S.storeSearch = box.value; S.storeFilter = 'All'; go('store'); setTimeout(() => { const s = $('#store-search'); if (s) s.scrollIntoView({ block: 'center' }); }, 30); }
+    box.value = ''; res.hidden = true; box.blur();
+  };
+  box.oninput = () => { sel = 0; draw(); };
+  box.onfocus = draw;
+  box.onblur = () => setTimeout(() => { res.hidden = true; }, 120);
+  box.onkeydown = (e) => {
+    if (e.key === 'ArrowDown') { sel = Math.min(sel + 1, hits.length - 1); draw(); e.preventDefault(); }
+    else if (e.key === 'ArrowUp') { sel = Math.max(sel - 1, 0); draw(); e.preventDefault(); }
+    else if (e.key === 'Enter') pick(hits.length ? sel : -1);
+    else if (e.key === 'Escape') { box.value = ''; res.hidden = true; box.blur(); }
+  };
+  document.addEventListener('keydown', (e) => {
+    const typing = /INPUT|TEXTAREA/.test(document.activeElement.tagName);
+    if ((e.key === '/' && !typing) || (e.key.toLowerCase() === 'k' && (e.ctrlKey || e.metaKey))) { e.preventDefault(); box.focus(); box.select(); }
+  });
+})();
 document.addEventListener('contextmenu', (e) => { if (!e.target.closest('input')) e.preventDefault(); });
 
 boot();

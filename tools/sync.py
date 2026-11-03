@@ -53,6 +53,10 @@ def art_for(g):
                 dst = os.path.join(out, kind + ext)
                 if not os.path.isfile(dst) or os.path.getmtime(dst) < os.path.getmtime(f): shutil.copyfile(f, dst)
                 found[kind] = f'art/{g["id"]}/{kind}{ext}'; break
+    for f in sorted(os.listdir(made)) if os.path.isdir(made) else []:     # screenshots for the community page
+        kind, ext = os.path.splitext(f)
+        if re.fullmatch(r'shot\d', kind) and ext in ('.jpg', '.png'):
+            dst = os.path.join(out, f); shutil.copyfile(os.path.join(made, f), dst); found[kind] = f'art/{g["id"]}/{f}'
     # hand-made art dropped straight into ui/art/<id>/ always wins
     for f in sorted(os.listdir(out)):
         kind, ext = os.path.splitext(f)
