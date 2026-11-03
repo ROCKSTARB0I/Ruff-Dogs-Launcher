@@ -322,7 +322,7 @@ static void paint(HDC dc) {
          x, 236, w, 90, 15.5f, 0, 0, C_DIM, 0, 0);
     fill_rr(x, 330, w, 66, 9, C_PANEL); stroke_rr(x + .5f, 330.5f, w - 1, 65, 9, C_LINE, 1);
     text(L"FREE", x + 18, 330, 70, 66, 20, 1, 1, 0xff6be08a, 0, 1);
-    text(L"Every game is free. No real money, ever.\nIt takes under 10 MB and a few seconds.", x + 86, 330, w - 100, 66, 14, 0, 0, C_TEXT, 0, 1);
+    text(L"Every game is free. No real money, ever.\nIt takes about 20 MB and a few seconds.", x + 86, 330, w - 100, 66, 14, 0, 0, C_TEXT, 0, 1);
     button(L"CANCEL", W_ - 44 - 130 - 12 - 150, by, 130, B_CANCEL, 0, 1);
     button(L"NEXT", W_ - 44 - 150, by, 150, B_NEXT, 1, 1);
     break;
@@ -355,7 +355,7 @@ static void paint(HDC dc) {
     fill_rr(x, 218, w - 120, 40, 7, 0xff15130f); stroke_rr(x + .5f, 218.5f, w - 121, 39, 7, g_hover == B_BROWSE ? 0xff4a4237 : 0xff3a342b, 1);
     { float bw = 108; int hov = g_hover == B_BROWSE; fill_rr(x + w - bw, 218, bw, 40, 7, hov ? 0xff2a2620 : 0xff1d1a16); stroke_rr(x + w - bw + .5f, 218.5f, bw - 1, 39, 7, C_LINE, 1);
       text(L"BROWSE", x + w - bw, 218, bw, 40, 14, 1, 0, C_TEXT, 1, 1); hit(x + w - bw, 218, bw, 40, B_BROWSE, 1); }
-    text(L"Needs about 10 MB.", x, 264, w, 20, 13, 0, 0, 0xff7d766b, 0, 0);
+    text(L"Needs about 20 MB.", x, 264, w, 20, 13, 0, 0, 0xff7d766b, 0, 0);
     checkbox(L"Put a shortcut on my desktop", x, 306, w, B_DESK, g_desk);
     checkbox(L"Add it to the Start menu", x, 340, w, B_MENU, g_menu);
     button(L"BACK", W_ - 44 - 130 - 12 - 170, by, 130, B_BACK, 0, 1);
