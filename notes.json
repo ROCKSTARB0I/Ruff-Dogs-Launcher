@@ -2,6 +2,14 @@
   "_note": "Update notes shown under What's new. Newest first. When a game gets an update, add an entry at the top: date (YYYY-MM-DD), a short title and plain-English items. Then run tools/sync.py and tools/publish.py. Days with no entry here fall back to the game's GitHub commit messages.",
   "overdrive": [
     {
+      "date": "2026-11-03",
+      "title": "Online works from the launcher",
+      "items": [
+        "Online races now find the Ruff Dogs server when you play from the Ruff Dogs Launcher.",
+        "Launcher players show up as PC players."
+      ]
+    },
+    {
       "date": "2026-11-02",
       "title": "Look around while you race",
       "items": [
@@ -38,6 +46,13 @@
     }
   ],
   "ghost-hunters-tv": [
+    {
+      "date": "2026-11-03",
+      "title": "Online works from the launcher",
+      "items": [
+        "Hosting and joining shows now works when you play from the Ruff Dogs Launcher."
+      ]
+    },
     {
       "date": "2026-11-02",
       "title": "Windows version and online fix",

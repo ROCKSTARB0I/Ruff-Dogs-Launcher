@@ -1,3 +1,4 @@
 dev/library/
 .DS_Store
 __pycache__/
+dist/

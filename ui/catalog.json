@@ -1,6 +1,6 @@
 {
- "version": 1793664542,
- "generated": "2026-11-03T00:09:02Z",
+ "version": 1793666755,
+ "generated": "2026-11-03T00:45:55Z",
  "games": [
   {
    "id": "overdrive",
@@ -17,9 +17,17 @@
    ],
    "rating": "Everyone 10+",
    "color": "#ff3b1f",
-   "commit": "b8635bd3a54ea0b8974addf4b71af960d963a5bc",
-   "updated": "2026-11-02T23:28:17Z",
+   "commit": "8c97221fde7c05e905c7f70cb006c883de8b1886",
+   "updated": "2026-11-03T00:45:19Z",
    "notes": [
+    {
+     "date": "2026-11-03",
+     "title": "Online works from the launcher",
+     "items": [
+      "Online races now find the Ruff Dogs server when you play from the Ruff Dogs Launcher.",
+      "Launcher players show up as PC players."
+     ]
+    },
     {
      "date": "2026-11-02",
      "title": "Look around while you race",
@@ -56,8 +64,8 @@
      ]
     }
    ],
-   "news": "Look around while you race",
-   "size": 6633110,
+   "news": "Online works from the launcher",
+   "size": 6633223,
    "files": 86,
    "web": "https://rockstarb0i.github.io/OverDrive/",
    "art": {
@@ -86,9 +94,16 @@
    ],
    "rating": "Everyone 10+",
    "color": "#7cff6b",
-   "commit": "fe8566c13b745e237ebf0dda78fac382f3f325ba",
-   "updated": "2026-11-02T02:21:19Z",
+   "commit": "899e08e64ffd34430cce0926b779023b8de32205",
+   "updated": "2026-11-03T00:45:25Z",
    "notes": [
+    {
+     "date": "2026-11-03",
+     "title": "Online works from the launcher",
+     "items": [
+      "Hosting and joining shows now works when you play from the Ruff Dogs Launcher."
+     ]
+    },
     {
      "date": "2026-11-02",
      "title": "Windows version and online fix",
@@ -107,8 +122,8 @@
      ]
     }
    ],
-   "news": "Windows version and online fix",
-   "size": 2280156,
+   "news": "Online works from the launcher",
+   "size": 2280228,
    "files": 66,
    "web": "https://rockstarb0i.github.io/Ghost-Hunters-TV/",
    "art": {
@@ -339,9 +354,16 @@
    ],
    "rating": "Mature 17+",
    "color": "#ff8a1f",
-   "commit": "140c0d0fba75a98d7a6c597ed0c1f892f0a5b6dd",
-   "updated": "2026-11-02T23:47:28Z",
+   "commit": "622919f7f6ef1e4dc96dbd99a56275864b7750d3",
+   "updated": "2026-11-03T00:33:59Z",
    "notes": [
+    {
+     "date": "2026-11-03",
+     "title": "Update",
+     "items": [
+      "Fixes and improvements."
+     ]
+    },
     {
      "date": "2026-11-02",
      "title": "The Shape update",
@@ -364,8 +386,8 @@
      ]
     }
    ],
-   "news": "The Shape update",
-   "size": 1560577,
+   "news": "Fixes and improvements.",
+   "size": 1561179,
    "files": 18,
    "web": "https://rockstarb0i.github.io/HALLOWEENVR/",
    "art": {
