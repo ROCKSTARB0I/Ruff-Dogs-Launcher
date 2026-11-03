@@ -72,6 +72,7 @@ static int make_link(const WCHAR *lnk, const WCHAR *target, const WCHAR *dir) {
   if (SUCCEEDED(IShellLinkW_QueryInterface(sl, &IID_IPersistFile, (void **)&pf))) { ok = SUCCEEDED(IPersistFile_Save(pf, lnk, TRUE)); IPersistFile_Release(pf); }
   IShellLinkW_Release(sl); return ok;
 }
+static void step(float p, const WCHAR *s);
 // what rides on the end of this .exe (see the top of the file)
 typedef struct { unsigned long long exeOff, exeLen, engOff, engLen; char engVer[33]; } Payload;
 static int payload_info(Payload *p) {

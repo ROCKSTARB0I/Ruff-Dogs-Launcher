@@ -9,8 +9,8 @@
 //   GAME      (when a ruffdogs-game.json sits beside the .exe) runs that game in its own window. Every installed
 //             <Title>.exe is a copy of this program with the game's icon written into it.
 //
-// Both run pages on WebView2, the web engine that comes with Windows 10/11, started by our own loader below
-// (Microsoft's small loader DLL is packed in only as a backup).
+// Both run pages on our own bundled Chromium (CEF, see cefhost.h), installed once by RuffDogsSetup.exe and shared by
+// the launcher and every game. No WebView2, no Edge.
 //
 // Build: python3 tools/pack.py   (compiles this with Zig and appends the launcher page)
 #define COBJMACROS
@@ -33,9 +33,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "WebView2.h"
 
-#define APP_VERSION "1.0.0"
+#define APP_VERSION "1.1.0"
+#define ENGINE_VER "150.0.23"          // the CEF build this program runs on (see cefhost.h); Setup installs it
 #define LHOST L"https://launcher.ruffdogs/"
 #define LHOST_A "https://launcher.ruffdogs/"
 #define WM_JSON (WM_APP + 1)
@@ -46,10 +46,7 @@
 #define BIG (MAX_PATH * 2)
 
 static HWND g_win;
-static ICoreWebView2Environment *g_env;
-static ICoreWebView2Controller *g_ctl;
-static ICoreWebView2 *g_web;
-static int g_triedFallback, g_isFs, g_gameMode, g_devtools;
+static int g_isFs, g_gameMode, g_devtools;
 static WINDOWPLACEMENT g_place = { sizeof(WINDOWPLACEMENT) };
 static WCHAR g_self[BIG], g_data[BIG], g_uiDir[BIG], g_uiNext[BIG], g_lib[BIG];
 static char g_repo[200] = "ROCKSTARB0I/Ruff-Dogs-Launcher", g_branch[64] = "main", g_uiPath[64] = "ui/", g_accountServer[300];
@@ -479,6 +476,8 @@ static void installed_json(Buf *b, const Inst *in) {
   WCHAR rec[BIG]; _snwprintf(rec, BIG, L"%ls\\ruffdogs-game.json", in->dir);
   char *j = read_file(rec, NULL), commit[64] = "", when[40] = "";
   json_str(j, "commit", commit, sizeof commit); json_str(j, "installedAt", when, sizeof when);
+  char eng[32] = ""; json_str(j, "engine", eng, sizeof eng);
+  if (strcmp(eng, ENGINE_VER)) commit[0] = 0;           // its .exe is from an older launcher: show it as needing an update, which rebuilds the .exe
   b_add(b, "{\"commit\":"); b_str(b, commit); b_add(b, ",\"dir\":"); b_wstr(b, in->dir);
   b_add(b, ",\"size\":%lld,\"installedAt\":", json_num(j, "size", 0)); b_str(b, when); b_add(b, "}");
   free(j);
@@ -702,7 +701,7 @@ static DWORD WINAPI install_thread(void *arg) {
   SYSTEMTIME st; GetSystemTime(&st);
   Buf r = { 0 };
   b_add(&r, "{\"id\":"); b_str(&r, job->id); b_add(&r, ",\"title\":"); b_str(&r, job->title);
-  b_add(&r, ",\"exe\":"); b_wstr(&r, name); b_add(&r, ",\"commit\":"); b_str(&r, m.commit[0] ? m.commit : job->commit);
+  b_add(&r, ",\"engine\":\"" ENGINE_VER "\",\"exe\":"); b_wstr(&r, name); b_add(&r, ",\"commit\":"); b_str(&r, m.commit[0] ? m.commit : job->commit);
   b_add(&r, ",\"size\":%lld,\"installedAt\":\"%04d-%02d-%02dT%02d:%02d:%02dZ\"}", m.total, st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
   WCHAR gj[BIG]; _snwprintf(gj, BIG, L"%ls\\ruffdogs-game.json", dest);
   write_file(gj, r.s, (DWORD)r.n); free(r.s);
@@ -850,260 +849,37 @@ static void set_fullscreen(int on) {
   g_isFs = on;
 }
 
-// --- COM event handlers. Each is a static object with a vtable; they live as long as the app, so refcounts are fixed.
-#define HANDLER_BASE(T, IIDNAME) \
-  static HRESULT STDMETHODCALLTYPE H_##T##_QI(T *This, REFIID riid, void **ppv) { \
-    if (IsEqualIID(riid, &IID_IUnknown) || IsEqualIID(riid, &IIDNAME)) { *ppv = This; return S_OK; } \
-    *ppv = NULL; return E_NOINTERFACE; } \
-  static ULONG STDMETHODCALLTYPE H_##T##_AddRef(T *This) { (void)This; return 1; } \
-  static ULONG STDMETHODCALLTYPE H_##T##_Release(T *This) { (void)This; return 1; }
-#define HANDLER(T, FN, NAME) \
-  static T##Vtbl NAME##Vt = { H_##T##_QI, H_##T##_AddRef, H_##T##_Release, FN }; \
-  static T NAME = { &NAME##Vt };
+#include "cefhost.h"
 
-// launcher page files: https://launcher.ruffdogs/... answered from the update folder or the pack
-HANDLER_BASE(ICoreWebView2WebResourceRequestedEventHandler, IID_ICoreWebView2WebResourceRequestedEventHandler)
-static HRESULT STDMETHODCALLTYPE onResource(ICoreWebView2WebResourceRequestedEventHandler *This, ICoreWebView2 *sender, ICoreWebView2WebResourceRequestedEventArgs *args) {
-  (void)This; (void)sender;
-  ICoreWebView2WebResourceRequest *req; LPWSTR uri = NULL; char rel[1024];
-  if (FAILED(ICoreWebView2WebResourceRequestedEventArgs_get_Request(args, &req))) return S_OK;
-  ICoreWebView2WebResourceRequest_get_Uri(req, &uri);
-  ICoreWebView2WebResourceRequest_Release(req);
-  int ok = uri && url_to_rel(uri, rel, sizeof rel);
-  CoTaskMemFree(uri);
-  IStream *s = ok ? open_asset(rel) : NULL;
-  ICoreWebView2WebResourceResponse *resp = NULL;
-  if (s) {
-    char h[256]; snprintf(h, sizeof h, "Content-Type: %s\r\nCache-Control: no-cache", mime(rel));
-    WCHAR *wh = widen(h);
-    ICoreWebView2Environment_CreateWebResourceResponse(g_env, s, 200, L"OK", wh, &resp);
-    free(wh); IStream_Release(s);
-  } else ICoreWebView2Environment_CreateWebResourceResponse(g_env, NULL, 404, L"Not Found", L"Content-Type: text/plain", &resp);
-  if (resp) { ICoreWebView2WebResourceRequestedEventArgs_put_Response(args, resp); ICoreWebView2WebResourceResponse_Release(resp); }
-  return S_OK;
-}
-HANDLER(ICoreWebView2WebResourceRequestedEventHandler, onResource, resH)
-
-HANDLER_BASE(ICoreWebView2WebMessageReceivedEventHandler, IID_ICoreWebView2WebMessageReceivedEventHandler)
-static HRESULT STDMETHODCALLTYPE onMessage(ICoreWebView2WebMessageReceivedEventHandler *This, ICoreWebView2 *sender, ICoreWebView2WebMessageReceivedEventArgs *args) {
-  (void)This; (void)sender;
-  LPWSTR m = NULL;
-  if (g_gameMode || FAILED(ICoreWebView2WebMessageReceivedEventArgs_TryGetWebMessageAsString(args, &m)) || !m) return S_OK;
-  char *s = narrow(m); CoTaskMemFree(m);
-  on_page_message(s); free(s);
-  return S_OK;
-}
-HANDLER(ICoreWebView2WebMessageReceivedEventHandler, onMessage, msgH)
-
-// F11 and Alt+Enter toggle fullscreen
-HANDLER_BASE(ICoreWebView2AcceleratorKeyPressedEventHandler, IID_ICoreWebView2AcceleratorKeyPressedEventHandler)
-static HRESULT STDMETHODCALLTYPE onKey(ICoreWebView2AcceleratorKeyPressedEventHandler *This, ICoreWebView2Controller *sender, ICoreWebView2AcceleratorKeyPressedEventArgs *args) {
-  (void)This; (void)sender;
-  COREWEBVIEW2_KEY_EVENT_KIND kind; UINT key;
-  ICoreWebView2AcceleratorKeyPressedEventArgs_get_KeyEventKind(args, &kind);
-  ICoreWebView2AcceleratorKeyPressedEventArgs_get_VirtualKey(args, &key);
-  if ((kind == COREWEBVIEW2_KEY_EVENT_KIND_KEY_DOWN && key == VK_F11) || (kind == COREWEBVIEW2_KEY_EVENT_KIND_SYSTEM_KEY_DOWN && key == VK_RETURN)) {
-    set_fullscreen(!g_isFs); ICoreWebView2AcceleratorKeyPressedEventArgs_put_Handled(args, TRUE);
-  }
-  return S_OK;
-}
-HANDLER(ICoreWebView2AcceleratorKeyPressedEventHandler, onKey, keyH)
-
-// a game asking for fullscreen (requestFullscreen) fills the screen with the whole window
-HANDLER_BASE(ICoreWebView2ContainsFullScreenElementChangedEventHandler, IID_ICoreWebView2ContainsFullScreenElementChangedEventHandler)
-static HRESULT STDMETHODCALLTYPE onFull(ICoreWebView2ContainsFullScreenElementChangedEventHandler *This, ICoreWebView2 *sender, IUnknown *args) {
-  (void)This; (void)args;
-  BOOL f = FALSE; ICoreWebView2_get_ContainsFullScreenElement(sender, &f); set_fullscreen(f);
-  return S_OK;
-}
-HANDLER(ICoreWebView2ContainsFullScreenElementChangedEventHandler, onFull, fullH)
-
-// links (GitHub, terms, Quest links) open in the player's real browser
-HANDLER_BASE(ICoreWebView2NewWindowRequestedEventHandler, IID_ICoreWebView2NewWindowRequestedEventHandler)
-static HRESULT STDMETHODCALLTYPE onNewWindow(ICoreWebView2NewWindowRequestedEventHandler *This, ICoreWebView2 *sender, ICoreWebView2NewWindowRequestedEventArgs *args) {
-  (void)This; (void)sender;
-  LPWSTR uri = NULL;
-  ICoreWebView2NewWindowRequestedEventArgs_get_Uri(args, &uri);
-  if (uri && (!_wcsnicmp(uri, L"https://", 8) || !_wcsnicmp(uri, L"http://", 7))) ShellExecuteW(NULL, L"open", uri, NULL, NULL, SW_SHOWNORMAL);
-  CoTaskMemFree(uri);
-  ICoreWebView2NewWindowRequestedEventArgs_put_Handled(args, TRUE);
-  return S_OK;
-}
-HANDLER(ICoreWebView2NewWindowRequestedEventHandler, onNewWindow, nwH)
-
-// the window title follows the game's page title
-HANDLER_BASE(ICoreWebView2DocumentTitleChangedEventHandler, IID_ICoreWebView2DocumentTitleChangedEventHandler)
-static HRESULT STDMETHODCALLTYPE onTitle(ICoreWebView2DocumentTitleChangedEventHandler *This, ICoreWebView2 *sender, IUnknown *args) {
-  (void)This; (void)args; (void)sender;
-  if (g_gameMode) { WCHAR *w = widen(g_gameTitle); SetWindowTextW(g_win, w); free(w); }
-  return S_OK;
-}
-HANDLER(ICoreWebView2DocumentTitleChangedEventHandler, onTitle, titleH)
-
-// signs the player into OVERDRIVE with their launcher account, unless the game already has its own login saved
-static void inject_account(void) {
+// what a game page gets before its own scripts run: who's playing and, for OVERDRIVE, the launcher's sign-in
+// (unless the game already has its own login saved)
+static char *game_boot_script(void) {
+  Buf b = { 0 };
+  b_add(&b, "window.ruffDogs=Object.freeze({launcher:true,game:"); b_str(&b, g_gameId); b_add(&b, ",platform:'PC'});");
   WCHAR p[BIG]; _snwprintf(p, BIG, L"%ls\\account.json", g_data);
-  char *j = read_file(p, NULL); if (!j) return;
-  char token[128] = ""; json_str(j, "token", token, sizeof token);
-  char *prof = json_raw(j, "profile");
-  int clean = token[0] && strspn(token, "0123456789abcdefABCDEF") == strlen(token);
-  if (clean && !strcmp(g_gameId, "overdrive")) {
-    Buf b = { 0 };
-    b_add(&b, "try{if(!localStorage.getItem('overdrive_token')){localStorage.setItem('overdrive_token','%s');", token);
-    if (prof && prof[0] == '{') { b_add(&b, "localStorage.setItem('overdrive_profile',"); b_str(&b, prof); b_add(&b, ");"); }
-    b_add(&b, "}}catch(e){}");
-    WCHAR *w = widen(b.s); ICoreWebView2_AddScriptToExecuteOnDocumentCreated(g_web, w, NULL); free(w); free(b.s);
-  }
-  free(prof); free(j);
-}
-
-HANDLER_BASE(ICoreWebView2CreateCoreWebView2ControllerCompletedHandler, IID_ICoreWebView2CreateCoreWebView2ControllerCompletedHandler)
-static HRESULT STDMETHODCALLTYPE onController(ICoreWebView2CreateCoreWebView2ControllerCompletedHandler *This, HRESULT hr, ICoreWebView2Controller *ctl) {
-  (void)This;
-  if (FAILED(hr) || !ctl) {
-    MessageBoxW(g_win, L"The launcher couldn't start its web view. Try restarting your PC, or reinstall the Microsoft Edge WebView2 Runtime.", L"Ruff Dogs", MB_ICONERROR);
-    PostQuitMessage(1); return S_OK;
-  }
-  g_ctl = ctl; ICoreWebView2Controller_AddRef(ctl);
-  ICoreWebView2Controller_get_CoreWebView2(ctl, &g_web);
-  ICoreWebView2Controller2 *c2;
-  if (SUCCEEDED(ICoreWebView2Controller_QueryInterface(ctl, &IID_ICoreWebView2Controller2, (void **)&c2))) {
-    COREWEBVIEW2_COLOR bg = { 255, 10, 11, 14 };
-    ICoreWebView2Controller2_put_DefaultBackgroundColor(c2, bg); ICoreWebView2Controller2_Release(c2);
-  }
-  ICoreWebView2Settings *st;
-  if (SUCCEEDED(ICoreWebView2_get_Settings(g_web, &st))) {
-    ICoreWebView2Settings_put_AreDefaultContextMenusEnabled(st, g_devtools);
-    ICoreWebView2Settings_put_AreDevToolsEnabled(st, g_devtools);
-    ICoreWebView2Settings_put_IsStatusBarEnabled(st, FALSE);
-    ICoreWebView2Settings_put_IsZoomControlEnabled(st, FALSE);
-    ICoreWebView2Settings3 *s3;
-    if (!g_devtools && SUCCEEDED(ICoreWebView2Settings_QueryInterface(st, &IID_ICoreWebView2Settings3, (void **)&s3))) {
-      ICoreWebView2Settings3_put_AreBrowserAcceleratorKeysEnabled(s3, FALSE); ICoreWebView2Settings3_Release(s3);   // no F5 / Ctrl+P etc.
+  char *j = read_file(p, NULL);
+  if (j && !strcmp(g_gameId, "overdrive")) {
+    char token[128] = ""; json_str(j, "token", token, sizeof token);
+    char *prof = json_raw(j, "profile");
+    if (token[0] && strspn(token, "0123456789abcdefABCDEF") == strlen(token)) {
+      b_add(&b, "try{if(!localStorage.getItem('overdrive_token')){localStorage.setItem('overdrive_token','%s');", token);
+      if (prof && prof[0] == '{') { b_add(&b, "localStorage.setItem('overdrive_profile',"); b_str(&b, prof); b_add(&b, ");"); }
+      b_add(&b, "}}catch(e){}");
     }
-    ICoreWebView2Settings_Release(st);
+    free(prof);
   }
-  EventRegistrationToken tok;
-  ICoreWebView2_add_WebMessageReceived(g_web, &msgH, &tok);
-  ICoreWebView2_add_ContainsFullScreenElementChanged(g_web, &fullH, &tok);
-  ICoreWebView2_add_NewWindowRequested(g_web, &nwH, &tok);
-  ICoreWebView2_add_DocumentTitleChanged(g_web, &titleH, &tok);
-  ICoreWebView2Controller_add_AcceleratorKeyPressed(ctl, &keyH, &tok);
-
-  RECT rc; GetClientRect(g_win, &rc); ICoreWebView2Controller_put_Bounds(ctl, rc);
-  ICoreWebView2Controller_put_IsVisible(ctl, TRUE);
-  if (g_gameMode) {
-    // the installed game folder becomes https://<id>.ruffdogs.game/
-    ICoreWebView2_3 *w3; WCHAR host[128], url[200];
-    WCHAR *wid = widen(g_gameId); _snwprintf(host, 128, L"%ls.ruffdogs.game", wid); free(wid);
-    if (FAILED(ICoreWebView2_QueryInterface(g_web, &IID_ICoreWebView2_3, (void **)&w3))) {
-      MessageBoxW(g_win, L"Please update the Microsoft Edge WebView2 Runtime, then start the game again.", L"Ruff Dogs", MB_ICONERROR);
-      PostQuitMessage(1); return S_OK;
-    }
-    ICoreWebView2_3_SetVirtualHostNameToFolderMapping(w3, host, g_gameDir, COREWEBVIEW2_HOST_RESOURCE_ACCESS_KIND_ALLOW);
-    ICoreWebView2_3_Release(w3);
-    char js[200]; snprintf(js, sizeof js, "window.ruffDogs=Object.freeze({launcher:true,game:'%s',platform:'PC'});", g_gameId);
-    WCHAR *wjs = widen(js); ICoreWebView2_AddScriptToExecuteOnDocumentCreated(g_web, wjs, NULL); free(wjs);
-    inject_account();
-    _snwprintf(url, 200, L"https://%ls/index.html", host);
-    ICoreWebView2_Navigate(g_web, url);
-  } else {
-    ICoreWebView2_AddWebResourceRequestedFilter(g_web, LHOST L"*", COREWEBVIEW2_WEB_RESOURCE_CONTEXT_ALL);
-    ICoreWebView2_add_WebResourceRequested(g_web, &resH, &tok);
-    ICoreWebView2_Navigate(g_web, LHOST L"index.html");
-  }
-  return S_OK;
-}
-HANDLER(ICoreWebView2CreateCoreWebView2ControllerCompletedHandler, onController, ctlH)
-
-static int start_with_microsoft_loader(void);
-HANDLER_BASE(ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler, IID_ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler)
-static HRESULT STDMETHODCALLTYPE onEnvironment(ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler *This, HRESULT hr, ICoreWebView2Environment *env) {
-  (void)This;
-  if (FAILED(hr) || !env) {
-    if (!g_triedFallback && start_with_microsoft_loader()) return S_OK;
-    MessageBoxW(g_win, L"Ruff Dogs games need the Microsoft Edge WebView2 Runtime, which comes with Windows 11 and most Windows 10 PCs.\n\nThe download page will open now. Install it, then start again.", L"Ruff Dogs", MB_ICONINFORMATION);
-    ShellExecuteW(NULL, L"open", L"https://go.microsoft.com/fwlink/p/?LinkId=2124703", NULL, NULL, SW_SHOWNORMAL);
-    PostQuitMessage(1); return S_OK;
-  }
-  g_env = env; ICoreWebView2Environment_AddRef(env);
-  ICoreWebView2Environment_CreateCoreWebView2Controller(env, g_win, &ctlH);
-  return S_OK;
-}
-HANDLER(ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler, onEnvironment, envH)
-
-// ------------------------------------------------------------------------------------------------ our WebView2 loader
-// Finds the WebView2 runtime that Windows keeps up to date (Edge's engine) and starts it directly.
-static int find_runtime(WCHAR *dll) {
-  static const WCHAR *KEY = L"Software\\Microsoft\\EdgeUpdate\\ClientState\\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}";
-  HKEY roots[2] = { HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE };
-  for (int i = 0; i < 2; i++) {
-    HKEY k; WCHAR dir[MAX_PATH]; DWORD n = sizeof dir, type;
-    if (RegOpenKeyExW(roots[i], KEY, 0, KEY_READ | KEY_WOW64_32KEY, &k)) continue;
-    LONG r = RegQueryValueExW(k, L"EBWebView", NULL, &type, (BYTE *)dir, &n);
-    RegCloseKey(k);
-    if (r || type != REG_SZ) continue;
-    dir[MAX_PATH - 1] = 0;
-    _snwprintf(dll, BIG, L"%ls\\EBWebView\\x64\\EmbeddedBrowserWebView.dll", dir);
-    if (exists(dll)) return 1;
-  }
-  return 0;
-}
-static void user_data_dir(WCHAR *ud) {
-  if (g_gameMode) { WCHAR *w = widen(g_gameId); _snwprintf(ud, BIG, L"%ls\\GameData\\%ls", g_data, w); free(w); }
-  else _snwprintf(ud, BIG, L"%ls\\WebView", g_data);
-}
-typedef HRESULT (STDMETHODCALLTYPE *CreateInternal)(BOOL, int, PCWSTR, IUnknown *, ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler *);
-static int start_own_loader(void) {
-  WCHAR dll[BIG], ud[BIG];
-  if (!find_runtime(dll)) return 0;
-  HMODULE m = LoadLibraryW(dll); if (!m) return 0;
-  CreateInternal create = (CreateInternal)(void *)GetProcAddress(m, "CreateWebViewEnvironmentWithOptionsInternal");
-  if (!create) return 0;
-  user_data_dir(ud);
-  return SUCCEEDED(create(TRUE, 0, ud, NULL, &envH));
-}
-// Backup: Microsoft's small loader DLL. The launcher unpacks it into its data folder, where the games find it too.
-typedef HRESULT (STDMETHODCALLTYPE *CreateWithOptions)(PCWSTR, PCWSTR, IUnknown *, ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler *);
-static void unpack_loader(void) {
-  WCHAR p[BIG]; _snwprintf(p, BIG, L"%ls\\WebView2Loader.dll", g_data);
-  PakEntry *e = pak_find("_native/WebView2Loader.dll"); if (!e || exists(p)) return;
-  char *b = pak_read(e); if (b) { write_file(p, b, (DWORD)e->size); free(b); }
-}
-static int start_with_microsoft_loader(void) {
-  g_triedFallback = 1;
-  WCHAR p[BIG], ud[BIG]; _snwprintf(p, BIG, L"%ls\\WebView2Loader.dll", g_data);
-  if (!exists(p)) return 0;
-  HMODULE m = LoadLibraryW(p); if (!m) return 0;
-  CreateWithOptions create = (CreateWithOptions)(void *)GetProcAddress(m, "CreateCoreWebView2EnvironmentWithOptions");
-  if (!create) return 0;
-  user_data_dir(ud);
-  return SUCCEEDED(create(NULL, ud, NULL, &envH));
-}
-static void create_webview(void) {
-  // games play sound straight away like a console, and laptops with two GPUs run them on the faster one
-  SetEnvironmentVariableW(L"WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS", L"--autoplay-policy=no-user-gesture-required --force_high_performance_gpu");
-  if (start_own_loader()) return;
-  if (start_with_microsoft_loader()) return;
-  onEnvironment(&envH, E_FAIL, NULL);
+  free(j);
+  return b.s;
 }
 
 static LRESULT CALLBACK wndproc(HWND h, UINT msg, WPARAM wp, LPARAM lp) {
   switch (msg) {
-  case WM_SIZE:
-    if (g_ctl) { RECT rc; GetClientRect(h, &rc); ICoreWebView2Controller_put_Bounds(g_ctl, rc); }
-    return 0;
-  case WM_MOVE: case WM_MOVING:
-    if (g_ctl) ICoreWebView2Controller_NotifyParentWindowPositionChanged(g_ctl);
-    break;
+  case WM_SIZE: resize_browser(); return 0;
   case WM_GETMINMAXINFO: { MINMAXINFO *mm = (MINMAXINFO *)lp; mm->ptMinTrackSize.x = 960; mm->ptMinTrackSize.y = 600; return 0; }
-  case WM_JSON: {
-    char *s = (char *)lp;
-    if (g_web && s) { WCHAR *w = widen(s); ICoreWebView2_PostWebMessageAsJson(g_web, w); free(w); }
-    free(s); return 0;
-  }
+  case WM_JSON: { char *s = (char *)lp; send_to_page(s); free(s); return 0; }
+  case WM_PAGEMSG: { char *s = (char *)lp; if (!g_gameMode && s) on_page_message(s); free(s); return 0; }
   case WM_STATE: send_state(); return 0;
-  case WM_STARTWEB: create_webview(); return 0;
+  case WM_STARTWEB: create_browser(); return 0;
   case WM_PICKFOLDER: pick_folder(); return 0;
   case WM_GAMEEXIT: {
     if (!g_proc) return 0;
@@ -1130,9 +906,12 @@ static LRESULT CALLBACK wndproc(HWND h, UINT msg, WPARAM wp, LPARAM lp) {
     free(t); SelectObject(dc, old); DeleteObject(f); EndPaint(h, &ps); return 0;
   }
   case WM_ERASEBKGND: return 1;
+  case WM_CLOSE:                                        // close the page first; the engine quits once it's gone
+    if (g_browser && !g_closing) { g_closing = 1; cef_browser_host_t *bh = g_browser->get_host(g_browser); bh->close_browser(bh, 1); RELEASE(bh); }
+    DestroyWindow(h); return 0;
   case WM_DESTROY:
-    if (g_ctl) ICoreWebView2Controller_Close(g_ctl);
-    PostQuitMessage(0); return 0;
+    if (!g_browser) p_cef_quit_message_loop();
+    return 0;
   }
   return DefWindowProcW(h, msg, wp, lp);
 }
@@ -1218,6 +997,7 @@ int WINAPI wWinMain(HINSTANCE inst, HINSTANCE prev, PWSTR cmd, int show) {
   SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
   CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
   GetModuleFileNameW(NULL, g_self, BIG);
+  { int c = cef_start(inst); if (c >= 0) return c; }    // Chromium's helper processes are this same .exe
   WCHAR local[MAX_PATH]; SHGetFolderPathW(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, local);
   _snwprintf(g_data, BIG, L"%ls\\Ruff Dogs", local);
   SHCreateDirectoryExW(NULL, g_data, NULL);
@@ -1249,13 +1029,14 @@ int WINAPI wWinMain(HINSTANCE inst, HINSTANCE prev, PWSTR cmd, int show) {
     }
     if (!pak_open()) { MessageBoxW(NULL, L"This copy of the Ruff Dogs Launcher is damaged. Please download it again.", L"Ruff Dogs", MB_ICONERROR); return 1; }
     load_config();
-    unpack_loader();
     _snwprintf(g_uiDir, BIG, L"%ls\\ui", g_data);
     _snwprintf(g_uiNext, BIG, L"%ls\\ui-next", g_data);
     settings_load();
     inst_load();
     refresh_shortcuts();
   }
+
+  if (!cef_init(inst)) return 1;
 
   WNDCLASSEXW wc = { sizeof wc };
   wc.lpfnWndProc = wndproc; wc.hInstance = inst; wc.lpszClassName = g_gameMode ? L"RuffDogsGame" : L"RuffDogsLauncher";
@@ -1275,10 +1056,10 @@ int WINAPI wWinMain(HINSTANCE inst, HINSTANCE prev, PWSTR cmd, int show) {
   if (!g_gameMode) CloseHandle(CreateThread(NULL, 0, ui_update_thread, NULL, 0, NULL));
   PostMessageW(g_win, WM_STARTWEB, 0, 0);
 
-  MSG m;
-  while (GetMessageW(&m, NULL, 0, 0) > 0) { TranslateMessage(&m); DispatchMessageW(&m); }
+  p_cef_run_message_loop();                            // the engine runs the Windows message loop too
+  p_cef_shutdown();
   CoUninitialize();
   (void)cmd;
-  return (int)m.wParam;
+  return 0;
 }
 int WINAPI WinMain(HINSTANCE inst, HINSTANCE prev, LPSTR cmd, int show) { (void)cmd; return wWinMain(inst, prev, GetCommandLineW(), show); }
