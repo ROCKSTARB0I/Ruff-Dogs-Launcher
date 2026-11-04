@@ -1,9 +1,9 @@
 {
-"version":14,
+"version":15,
 "files":{
 "app.js":"d8b52fbc48f706b9a6f3778f93705e8863245b8a",
 "bridge.js":"a08eb117f9beaa881e376d7dec1368a31bcbee5e",
-"catalog.json":"3835f716764b1ce580c5552e07f54f8da062df52",
+"catalog.json":"0b42d163923c408650bf1c1336e7ce9a8f9c5a59",
 "config.json":"547a659321b648600a8e240894c964df326e1067",
 "index.html":"2ef08913256e2953ab4a185642f48ce1ae554e05",
 "style.css":"e9854c4ec49693a5c2856c38fdbf5702b1bdd406",
@@ -86,6 +86,11 @@
 "art/postal2-vr/icon.jpg":"3a9bc5e4057c1d8601633cbf8f291abb55af661c",
 "art/postal2-vr/logo.png":"dbed5028f91d90b716d32e91f9c91da102aedff5",
 "art/postal2-vr/shot1.jpg":"58f60c4c2677081d37bed56eff680f8fa23484cc",
+"art/the-bad-company/cover.png":"2a764b49cea3f2f8de95c37eac0fdc8daf71442d",
+"art/the-bad-company/game.ico":"6e07d2d3b19efbbaf863fe336b4067c41ca3fa2e",
+"art/the-bad-company/header.png":"547c3d3b5f9c998aad94b45ea51e58fdeef79741",
+"art/the-bad-company/hero.png":"43152e2528204d682f8cae7430eb1ceaeabdb012",
+"art/the-bad-company/icon.png":"83c6cde2c2c0e06dda3b697d9d0ba9de392d4126",
 "brand/dog.png":"580408860e979a0c6b5063886dd30bf59cc9fefb",
 "brand/logo-mark.png":"a6f602f90e4870149125425a802fc13a23a19da5",
 "brand/logo-wide.png":"f2bbe937cb2f84b8b46aabc1fffc5c3947d643e2",
@@ -99,6 +104,7 @@
 "manifests/jasons-revenge.json":"d430ce28fea0c6d4e0853098570743377b83a7ba",
 "manifests/manhuntvr.json":"669f588ce3be3d22a95e49f104f8c1307090d3af",
 "manifests/overdrive.json":"cdcc7f900828d699ace629548fa83eac53d64f43",
-"manifests/postal2-vr.json":"75b0915fffa6fbfa634ae5f8e1fd9c0f28968697"
+"manifests/postal2-vr.json":"75b0915fffa6fbfa634ae5f8e1fd9c0f28968697",
+"manifests/the-bad-company.json":"b0ea96ab6d834dc18d2ffd35f4d260d5cc2905da"
 }
 }
