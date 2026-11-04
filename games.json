@@ -215,7 +215,7 @@
     {
       "id": "run-or-get-shot",
       "title": "RUN OR GET SHOT",
-      "repo": "Run-Or-Get-Shot",
+      "repo": "run-or-get-shot",
       "folder": "run-or-get-shot",
       "tagline": "No plan. No mercy. Just bad gas.",
       "about": "A point-and-click action comedy in fifteen episodes. Johnny hits things, Sarah opens things, Timmy ruins things and Joe hates things — and the same object answers differently depending on who is standing in front of it. Timed comic set pieces, top-down shootouts, and a recurring villain whose entire career is fart bombs. Every character, background and sound is drawn or synthesised at runtime from code.",
@@ -238,11 +238,26 @@
       ]
     },
     {
-      "id": "the-bad-company", "title": "THE BAD COMPANY", "repo": "the-bad-company", "folder": "the-bad-company",
+      "id": "the-bad-company",
+      "title": "THE BAD COMPANY",
+      "repo": "the-bad-company",
+      "folder": "the-bad-company",
       "tagline": "A top-down shooter in four people, and the company that made them.",
       "about": "An entry team hits the wrong address and a man loses everything. Twenty-nine missions across four playable leads whose stories cross, eight hundred real firearms, slow-motion dives and a score the game writes as it plays. Send the email or delete it, leave the last man breathing or do not: it changes who is still standing at the end, and it changes the bonus campaign you unlock afterwards.",
-      "genres": ["Shooter", "Action", "Story"], "modes": ["PC"], "rating": "Mature 17+", "color": "#ff2d3d",
-      "exclude": ["packaging/", "dist/"]
+      "genres": [
+        "Shooter",
+        "Action",
+        "Story"
+      ],
+      "modes": [
+        "PC"
+      ],
+      "rating": "Mature 17+",
+      "color": "#ff2d3d",
+      "exclude": [
+        "packaging/",
+        "dist/"
+      ]
     }
   ]
 }

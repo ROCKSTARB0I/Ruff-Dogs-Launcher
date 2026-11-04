@@ -1,6 +1,6 @@
 {
- "version": 1793760358,
- "generated": "2026-11-04T02:45:58Z",
+ "version": 1793760706,
+ "generated": "2026-11-04T02:51:46Z",
  "games": [
   {
    "id": "overdrive",
@@ -609,6 +609,50 @@
     "ico": "art/granny-vr/game.ico"
    },
    "added": "2026-11-01"
+  },
+  {
+   "id": "run-or-get-shot",
+   "title": "RUN OR GET SHOT",
+   "repo": "run-or-get-shot",
+   "tagline": "No plan. No mercy. Just bad gas.",
+   "about": "A point-and-click action comedy in fifteen episodes. Johnny hits things, Sarah opens things, Timmy ruins things and Joe hates things \u2014 and the same object answers differently depending on who is standing in front of it. Timed comic set pieces, top-down shootouts, and a recurring villain whose entire career is fart bombs. Every character, background and sound is drawn or synthesised at runtime from code.",
+   "genres": [
+    "Adventure",
+    "Comedy",
+    "Action"
+   ],
+   "modes": [
+    "PC"
+   ],
+   "rating": "Teen 13+",
+   "color": "#a6cf1f",
+   "commit": "11beb8465e3cac876464044abcf31db88c4d1540",
+   "updated": "2026-11-04T02:50:00Z",
+   "notes": [
+    {
+     "date": "2026-11-04",
+     "title": "New game: RUN OR GET SHOT",
+     "items": [
+      "Fifteen episodes, from a building with every door welded shut to a birthday nobody organised.",
+      "Point and click to explore. Hold SPACE to light up everything you can click in a room.",
+      "Switch between Johnny, Sarah, Timmy and Joe with 1-4 or TAB \u2014 each one gets a different answer out of the same object.",
+      "Comic set pieces where you click targets as the ring closes, and top-down shootouts with WASD, mouse aim and a dive roll on SPACE.",
+      "Every character, prop, background, sound effect and piece of music is generated at runtime. The game ships with no image or audio files at all."
+     ]
+    }
+   ],
+   "news": "New game: RUN OR GET SHOT",
+   "size": 652282,
+   "files": 40,
+   "web": "https://rockstarb0i.github.io/run-or-get-shot/",
+   "art": {
+    "cover": "art/run-or-get-shot/cover.png",
+    "header": "art/run-or-get-shot/header.png",
+    "hero": "art/run-or-get-shot/hero.png",
+    "icon": "art/run-or-get-shot/icon.png",
+    "ico": "art/run-or-get-shot/game.ico"
+   },
+   "added": "2026-11-03"
   },
   {
    "id": "the-bad-company",

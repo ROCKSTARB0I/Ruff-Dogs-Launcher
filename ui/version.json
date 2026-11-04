@@ -1,9 +1,9 @@
 {
-"version":16,
+"version":17,
 "files":{
 "app.js":"d8b52fbc48f706b9a6f3778f93705e8863245b8a",
 "bridge.js":"a08eb117f9beaa881e376d7dec1368a31bcbee5e",
-"catalog.json":"7711ebde0972c448ee0c9b86e5f1960881cc0b72",
+"catalog.json":"12648c5d403ee6eb4fe44f2baebd35494a168461",
 "config.json":"547a659321b648600a8e240894c964df326e1067",
 "index.html":"2ef08913256e2953ab4a185642f48ce1ae554e05",
 "style.css":"e9854c4ec49693a5c2856c38fdbf5702b1bdd406",
@@ -86,6 +86,11 @@
 "art/postal2-vr/icon.jpg":"3a9bc5e4057c1d8601633cbf8f291abb55af661c",
 "art/postal2-vr/logo.png":"dbed5028f91d90b716d32e91f9c91da102aedff5",
 "art/postal2-vr/shot1.jpg":"58f60c4c2677081d37bed56eff680f8fa23484cc",
+"art/run-or-get-shot/cover.png":"f26825d8c1a514674238741ef23b125a8630d72e",
+"art/run-or-get-shot/game.ico":"c449874aee73017ecc181c61980f72514883ee0d",
+"art/run-or-get-shot/header.png":"e5abc47235fe1fd82201bac900b4f669da3f6d0c",
+"art/run-or-get-shot/hero.png":"6ff83d333df464cf48acf8d8da9dd15ca90381aa",
+"art/run-or-get-shot/icon.png":"3a7aada08bcd504543da2db0f0dce95474f9160a",
 "art/the-bad-company/cover.png":"2a764b49cea3f2f8de95c37eac0fdc8daf71442d",
 "art/the-bad-company/game.ico":"6e07d2d3b19efbbaf863fe336b4067c41ca3fa2e",
 "art/the-bad-company/header.png":"547c3d3b5f9c998aad94b45ea51e58fdeef79741",
@@ -105,6 +110,7 @@
 "manifests/manhuntvr.json":"669f588ce3be3d22a95e49f104f8c1307090d3af",
 "manifests/overdrive.json":"cdcc7f900828d699ace629548fa83eac53d64f43",
 "manifests/postal2-vr.json":"75b0915fffa6fbfa634ae5f8e1fd9c0f28968697",
+"manifests/run-or-get-shot.json":"cc828c6449b3560cd134eecc1721635518266bf8",
 "manifests/the-bad-company.json":"b0ea96ab6d834dc18d2ffd35f4d260d5cc2905da"
 }
 }
